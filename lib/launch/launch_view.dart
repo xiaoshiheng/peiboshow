@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:peiboshow/global_contoller/global_controller.dart';
-import 'package:peiboshow/services/netease_live_service.dart';
 
 import '../routes/all_routes.dart';
 
@@ -43,7 +42,7 @@ class _LaunchViewState extends State<LaunchView> {
     await globalController.getToken();
     if (!mounted) return;
     if (globalController.token != null && globalController.token!.isNotEmpty) {
-      // Get.offNamed(AllRoutes.home);
+      Get.offNamed(AllRoutes.liveFeedPage);
     } else {
       Get.offNamed(AllRoutes.login);
       // Get.to(LiveRoomsScreen());

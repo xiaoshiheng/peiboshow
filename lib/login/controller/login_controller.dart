@@ -8,6 +8,7 @@ import '../../api_request/api_exception.dart';
 import '../../api_request/api_request.dart';
 import '../../api_request/api_request_client.dart';
 import '../../global_contoller/global_controller.dart';
+import '../../models/user_model.dart';
 import '../../routes/all_routes.dart';
 
 class LoginController extends GetxController {
@@ -108,13 +109,14 @@ class LoginController extends GetxController {
     debugPrint('登录手机号: ${phoneController.text.trim()}');
     debugPrint('登录验证码: ${codeController.text.trim()}');
     request(()async{
-      Map<String, dynamic> data = await requestClient.post("/vloginCustomer",data: {"mobile":phoneController.text,"vcode":codeController.text});
-      print(data);
-      globalController.token = data["token"];
-      await globalController.saveToken(globalController.token ?? "");
+      Map<String, dynamic> response = await requestClient.post("/vloginCustomer",data: {"mobile":phoneController.text,"vcode":codeController.text});
+      print(response);
+      globalController.userModel = UserModel.fromJson(response["user"]);
+      globalController.token = response["token"];
+      await globalController.saveToken(globalController.token ?? "", globalController.userModel);
       if (globalController.token != null && globalController.token!.isNotEmpty) {
         //需要先判断有没有绑定过包厢，如果没有绑定过包厢，先跳转到绑定包厢页面
-        // Get.offNamed(AllRoutes.launch);
+         Get.offNamed(AllRoutes.liveFeedPage);
       }
     },onError: (exception){
       SmartDialog.showNotify(msg: exception.message ?? ApiException.unknownException, notifyType: NotifyType.error);

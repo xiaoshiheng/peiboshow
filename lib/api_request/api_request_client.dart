@@ -21,7 +21,12 @@ class RequestClient{
     _dio.interceptors.add(TokenInterceptor());
     //添加请求信息拦截器
     _dio.interceptors.add(LogInterceptor(
-        requestHeader: true, requestBody: true, responseHeader: true
+      request: true,
+      requestHeader: true,
+      requestBody: true,
+      responseHeader: true,
+      responseBody: true,
+      error: true,
     ));
 
   }
