@@ -30,26 +30,26 @@ class LiveFeedPageController extends GetxController {
     refresh();
   }
 
-  /// 首次加载 / 下拉刷新: 回到第一页并覆盖数据
-  Future<void> refresh() async {
+  /// 首次加载 / 下拉刷新: 回到第一页并覆盖数据, 返回是否成功
+  Future<bool> refresh() async {
     _page = 1;
     total = 0;
-    await _fetchRooms(replace: true);
+    return await _fetchRooms(replace: true);
   }
 
-  /// 上拉加载更多: 追加下一页
-  Future<void> loadMore() async {
-    if (!hasMore || _loading) return;
-    await _fetchRooms(replace: false);
+  /// 上拉加载更多: 追加下一页, 返回是否成功
+  Future<bool> loadMore() async {
+    if (_loading || !hasMore) return false;
+    return await _fetchRooms(replace: false);
   }
 
-  /// 请求并解析分页数据
+  /// 请求并解析分页数据, 返回是否成功
   /// [replace] true=覆盖(刷新), false=追加(加载更多)
-  Future<void> _fetchRooms({required bool replace}) async {
-    if (_loading) return;
+  Future<bool> _fetchRooms({required bool replace}) async {
+    if (_loading) return false;
     _loading = true;
     try {
-      await request(() async {
+      final bool ok = await request(() async {
         final Map<String, dynamic> data = await requestClient.post(
           "/c-zhibo-room/pageList",
           data: {
@@ -73,6 +73,7 @@ class LiveFeedPageController extends GetxController {
         _page++;
         update(["live_feed_page"]);
       });
+      return ok;
     } finally {
       _loading = false;
     }
