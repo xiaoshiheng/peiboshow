@@ -25,7 +25,6 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
   bool _isPlaying = false;
   bool _hasError = false;
   String _errorMessage = '';
-  bool _showHeart = false;
 
   @override
   void initState() {
@@ -90,18 +89,9 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
     }
   }
 
-  void _handleDoubleTap() {
-    setState(() => _showHeart = true);
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) setState(() => _showHeart = false);
-    });
-    widget.onDoubleTap?.call();
-  }
-
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onDoubleTap: _handleDoubleTap,
       onTap: () {
         if (_isPlaying) {
           _pause();
@@ -140,13 +130,11 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
 
           Container(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.black.withOpacity(0.4), Colors.transparent, Colors.black.withOpacity(0.7)], stops: const [0.0, 0.3, 1.0]))),
 
-          if (_showHeart) Center(child: AnimatedOpacity(opacity: _showHeart ? 1.0 : 0.0, duration: const Duration(milliseconds: 300), child: const Icon(Icons.favorite, color: Colors.red, size: 100))),
-
           if (widget.room.isLive) Positioned(left: 16, top: 50, child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(4)), child: const Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.circle, color: Colors.white, size: 8), SizedBox(width: 4), Text('LIVE', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold))]))),
 
           Positioned(left: 16, right: 80, bottom: 20, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(children: [CircleAvatar(radius: 20, backgroundImage: NetworkImage(widget.room.avatarUrl)), const SizedBox(width: 8), Expanded(child: Text(widget.room.anchorName, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis))]), const SizedBox(height: 8), Text(widget.room.roomName, style: const TextStyle(color: Colors.white, fontSize: 14), maxLines: 2, overflow: TextOverflow.ellipsis), if (widget.room.tags.isNotEmpty) ...[const SizedBox(height: 8), Wrap(spacing: 6, children: widget.room.tags.map((tag) => Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(10)), child: Text(tag, style: const TextStyle(color: Colors.white, fontSize: 11)))).toList())]])),
 
-          Positioned(right: 12, bottom: 100, child: Column(children: [Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6), decoration: BoxDecoration(color: Colors.black.withOpacity(0.5), borderRadius: BorderRadius.circular(15)), child: Row(mainAxisSize: MainAxisSize.min, children: [const Icon(Icons.visibility, color: Colors.white, size: 16), const SizedBox(width: 4), Text(_formatNumber(widget.room.onlineUsers), style: const TextStyle(color: Colors.white, fontSize: 12))])), const SizedBox(height: 16), _ActionButton(icon: Icons.favorite, label: '点赞', color: Colors.red), const SizedBox(height: 16), _ActionButton(icon: Icons.chat_bubble, label: '弹幕'), const SizedBox(height: 16), _ActionButton(icon: Icons.share, label: '分享')])),
+          Positioned(right: 12, bottom: 100, child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6), decoration: BoxDecoration(color: Colors.black.withOpacity(0.5), borderRadius: BorderRadius.circular(15)), child: Row(mainAxisSize: MainAxisSize.min, children: [const Icon(Icons.visibility, color: Colors.white, size: 16), const SizedBox(width: 4), Text(_formatNumber(widget.room.onlineUsers), style: const TextStyle(color: Colors.white, fontSize: 12))]))),
 
           if (!_isPlaying && _isInitialized) Center(child: Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.black.withOpacity(0.5), shape: BoxShape.circle), child: const Icon(Icons.play_arrow, color: Colors.white, size: 48))),
         ],
@@ -165,18 +153,5 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
     _player?.release();
     _player?.dispose();
     super.dispose();
-  }
-}
-
-class _ActionButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color? color;
-
-  const _ActionButton({required this.icon, required this.label, this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(children: [Container(width: 50, height: 50, decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle), child: Icon(icon, color: color ?? Colors.white, size: 28)), const SizedBox(height: 4), Text(label, style: const TextStyle(color: Colors.white, fontSize: 12))]);
   }
 }
