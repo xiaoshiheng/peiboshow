@@ -19,7 +19,7 @@ class NeteaseLiveService {
         anchorName: '电竞小王',
         avatarUrl: 'https://picsum.photos/seed/avatar1/200/200',
         // 公开测试FLV流(用于验证media_kit是否正常)
-        streamUrl: 'https://flva4577897.live.126.net/live/9254bb63c36446bdb4bf4d16ff853e3b.flv?netease=flva4577897.live.126.net',
+        streamUrl: 'https://flva4577897.live.126.net/live/27a1d2bd0557427f838065467aee10be.flv?netease=flva4577897.live.126.net',
         coverUrl: 'https://picsum.photos/seed/cover1/720/1280',
         onlineUsers: 12580,
         streamType: 'flv',
@@ -32,10 +32,10 @@ class NeteaseLiveService {
         anchorName: '音乐小仙女',
         avatarUrl: 'https://picsum.photos/seed/avatar2/200/200',
         // HLS拉流地址(iOS/Android通用)
-        streamUrl: 'https://pullhlsa4577897.live.126.net/live/11092e5af5794bbcb98159c8d0332468/playlist.m3u8',
+        streamUrl: 'https://flva4577897.live.126.net/live/5968f253af1e451ebc789e44d149c1db.flv?netease=flva4577897.live.126.net',
         coverUrl: 'https://picsum.photos/seed/cover2/720/1280',
         onlineUsers: 8934,
-        streamType: 'hls', // ✅ 保持 hls
+        streamType: 'flv', // ✅ 保持 hls
         isLive: true,
         tags: ['音乐', '唱歌', '聊天'],
       ),

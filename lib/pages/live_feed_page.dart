@@ -18,15 +18,12 @@ class LiveFeedPage extends StatefulWidget {
 class _LiveFeedPageState extends State<LiveFeedPage> {
   late PageController _pageController;
   int _currentIndex = 0;
-  
-  // 虚拟列表长度(模拟无限滚动)
-  static const int _virtualItemCount = 10000;
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(initialPage: _virtualItemCount ~/ 2); // 从中间开始
-    _currentIndex = _virtualItemCount ~/ 2;
+    _pageController = PageController();
+    _currentIndex = 0;
   }
 
   /// 处理页面切换
@@ -35,26 +32,19 @@ class _LiveFeedPageState extends State<LiveFeedPage> {
       _currentIndex = index;
     });
 
-    // 计算真实索引(取模循环)
-    final realIndex = index % widget.rooms.length;
-    print('Switched to room: ${widget.rooms[realIndex].roomName} (index: $realIndex)');
-    
-    // TODO: 在这里触发加载更多数据
-    // if (index > _virtualItemCount - 100) {
-    //   _loadMoreRooms();
-    // }
+    print('Switched to room: ${widget.rooms[index].roomName} (index: $index)');
   }
 
-  /// 获取真实的房间数据(通过取模实现循环)
+  /// 获取真实的房间数据
   LiveRoomModel _getRoom(int index) {
-    return widget.rooms[index % widget.rooms.length];
+    return widget.rooms[index];
   }
 
   /// 双击点赞
   void _handleLike() {
-    final room = _getRoom(_currentIndex); // ✅ 使用取模获取真实数据
+    final room = _getRoom(_currentIndex);
     print('Liked room: ${room.roomName}');
-    
+
     // TODO: 调用点赞API
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -72,10 +62,10 @@ class _LiveFeedPageState extends State<LiveFeedPage> {
       body: PageView.builder(
         controller: _pageController,
         scrollDirection: Axis.vertical,
-        itemCount: _virtualItemCount, // 虚拟无限列表
+        itemCount: widget.rooms.length,
         onPageChanged: _onPageChanged,
         itemBuilder: (context, index) {
-          final room = _getRoom(index); // 通过取模获取真实数据
+          final room = _getRoom(index);
 
           return VisibilityDetector(
             key: Key('room-${room.roomId}-$index'),
