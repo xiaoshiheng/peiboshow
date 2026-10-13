@@ -18,7 +18,6 @@ class DanmuView extends StatefulWidget {
 class _DanmuViewState extends State<DanmuView> {
   late final DanmuController _controller =
       Get.find<DanmuController>(tag: widget.tag);
-  final TextEditingController _inputController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   Worker? _worker;
 
@@ -37,17 +36,9 @@ class _DanmuViewState extends State<DanmuView> {
     });
   }
 
-  void _onSend() {
-    final text = _inputController.text.trim();
-    if (text.isEmpty) return;
-    _controller.send(text);
-    _inputController.clear();
-  }
-
   @override
   void dispose() {
     _worker?.dispose();
-    _inputController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -69,8 +60,6 @@ class _DanmuViewState extends State<DanmuView> {
             );
           }),
         ),
-        const SizedBox(height: 8),
-        _buildInputBar(),
       ],
     );
   }
@@ -135,15 +124,15 @@ class _DanmuViewState extends State<DanmuView> {
     return _richLine(name, ' 点了个赞', const Color(0xFFFF8A80));
   }
 
-  /// 系统提示行(居中弱化样式)
+  /// 系统提示行(type3 游客进入:红色字体,字号加大 2 号)
   Widget _systemLine(String text) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Text(
         text,
         style: const TextStyle(
-          color: Colors.white60,
-          fontSize: 13,
+          color: Colors.red,
+          fontSize: 15,
           fontStyle: FontStyle.italic,
           shadows: [Shadow(color: Colors.black54, blurRadius: 3)],
         ),
@@ -175,46 +164,6 @@ class _DanmuViewState extends State<DanmuView> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildInputBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.4),
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _inputController,
-              style: const TextStyle(color: Colors.white, fontSize: 14),
-              cursorColor: Colors.white,
-              textInputAction: TextInputAction.send,
-              onSubmitted: (_) => _onSend(),
-              decoration: const InputDecoration(
-                isDense: true,
-                border: InputBorder.none,
-                hintText: '说点什么...',
-                hintStyle: TextStyle(color: Colors.white38, fontSize: 14),
-              ),
-            ),
-          ),
-          Obx(() {
-            final ok = _controller.connected.value;
-            return IconButton(
-              onPressed: ok ? _onSend : null,
-              icon: Icon(
-                Icons.send,
-                size: 20,
-                color: ok ? const Color(0xFFFF4D6D) : Colors.white30,
-              ),
-            );
-          }),
-        ],
       ),
     );
   }
