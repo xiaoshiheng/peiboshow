@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:fijkplayer/fijkplayer.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:get/get.dart';
 import '../models/live_room_model.dart';
+import '../pages/controller/danmu_controller.dart';
+import 'danmu_view.dart';
 
 class LiveStreamPlayer extends StatefulWidget {
   final LiveRoomModel room;
@@ -30,6 +33,9 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
   void initState() {
     super.initState();
     _initializePlayer();
+    if (widget.isActive) {
+      _ensureDanmu();
+    }
   }
 
   @override
@@ -38,9 +44,32 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
     if (widget.isActive != oldWidget.isActive) {
       if (widget.isActive) {
         _play();
+        _ensureDanmu();
       } else {
         _pause();
+        _disposeDanmu();
       }
+    }
+  }
+
+  /// 弹幕控制器的 GetX tag(每个房间唯一)
+  String get _danmuTag => 'danmu_${widget.room.id}';
+
+  /// 确保当前房间的弹幕控制器已注册并连接
+  void _ensureDanmu() {
+    final roomId = widget.room.id;
+    if (roomId == null) return;
+    if (Get.isRegistered<DanmuController>(tag: _danmuTag)) {
+      Get.find<DanmuController>(tag: _danmuTag).connect();
+    } else {
+      Get.put(DanmuController(roomId: roomId), tag: _danmuTag);
+    }
+  }
+
+  /// 页面切走时销毁弹幕控制器,断开 WebSocket
+  void _disposeDanmu() {
+    if (Get.isRegistered<DanmuController>(tag: _danmuTag)) {
+      Get.delete<DanmuController>(tag: _danmuTag);
     }
   }
 
@@ -187,6 +216,18 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
           // Positioned(right: 12, bottom: 100, child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6), decoration: BoxDecoration(color: Colors.black.withOpacity(0.5), borderRadius: BorderRadius.circular(15)), child: Row(mainAxisSize: MainAxisSize.min, children: [const Icon(Icons.visibility, color: Colors.white, size: 16), const SizedBox(width: 4), Text(_formatNumber(widget.room.onlineUsers), style: const TextStyle(color: Colors.white, fontSize: 12))]))),
 
           if (!_isPlaying && _isInitialized) Center(child: Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.black.withOpacity(0.5), shape: BoxShape.circle), child: const Icon(Icons.play_arrow, color: Colors.white, size: 48))),
+
+          // 弹幕层:仅在直播中、页面激活且控制器已注册时显示
+          if (widget.room.status == 1 &&
+              widget.isActive &&
+              Get.isRegistered<DanmuController>(tag: _danmuTag))
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: 24,
+              height: 300,
+              child: DanmuView(tag: _danmuTag),
+            ),
         ],
       ),
     );
@@ -200,6 +241,7 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
 
   @override
   void dispose() {
+    _disposeDanmu();
     _player?.release();
     _player?.dispose();
     super.dispose();

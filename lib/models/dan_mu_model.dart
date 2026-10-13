@@ -11,7 +11,7 @@ class DanMuModel {
 	int? messageType;
 	HuDongDanMuModel? hudongMsgVo;
 	LiveRoomDanMuModel? zhiboRoomVo;
-	String? NewUserName;
+	String? newUserName;
 
 	DanMuModel();
 
