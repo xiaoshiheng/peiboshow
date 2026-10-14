@@ -126,9 +126,9 @@ class _AnchorListPanelState extends State<AnchorListPanel> {
     }
   }
 
-  /// 确认前往(isLike==1 时显示)
+  /// 确认前往(managerId>0 时显示)
   Future<void> _onConfirmGo(AnchorListModel item) async {
-    final name = item.sitem?.title ?? '该主播';
+    final name = item.roomName0 ?? '';
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
@@ -151,8 +151,13 @@ class _AnchorListPanelState extends State<AnchorListPanel> {
     );
     if (confirm != true) return;
 
-    // TODO: 接入"确认前往"业务逻辑
-    SmartDialog.showToast('确认前往');
+    final ok = await _controller.likeAnchor(item);
+    if (ok) {
+      SmartDialog.showToast('已确认前往');
+      _controller.getAnchorList();
+    } else {
+      SmartDialog.showToast('确认前往失败');
+    }
   }
 
   void _openViewer(AnchorModel anchor) {
@@ -305,9 +310,6 @@ class _AnchorListPanelState extends State<AnchorListPanel> {
       const Divider(height: 1, color: Colors.white12),
       itemBuilder: (context, index) {
         AnchorListModel item = _controller.anchors[index];
-        if (index==0){
-          item.sitem?.isLike = 1;
-        }
           return _buildRow(item);
         return const SizedBox.shrink();
       }
@@ -383,12 +385,12 @@ class _AnchorListPanelState extends State<AnchorListPanel> {
             ),
           ),
           const SizedBox(width: 8),
-          // 右侧按钮区:isLike==1 时额外显示绿色"确认前往"按钮
+          // 右侧按钮区:managerId>0(一见倾心) 时额外显示绿色"确认前往"按钮
           Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              if (anchor?.isLike == 1) ...[
+              if ((item.managerId ?? 0) > 0) ...[
                 SizedBox(
                   width: 64,
                   child: OutlinedButton(

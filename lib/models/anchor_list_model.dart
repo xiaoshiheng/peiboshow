@@ -14,6 +14,9 @@ class AnchorListModel {
 	int? userId;
 	String? roonName;
 	AnchorModel? sitem;
+	int? managerId;
+	String? managerName;
+	String? roomName0;
 
 	AnchorListModel();
 

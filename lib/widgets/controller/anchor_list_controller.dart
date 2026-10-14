@@ -34,10 +34,10 @@ class AnchorListController extends GetxController {
         'online': true,
         'roomId': roomId,
       };
-      // 全部状态不传 isLike,已/未一见倾心分别传 1/0
+      // 全部状态不传 tempOrder,已/未一见倾心分别传 true/false
       final int? like = likeFilter.value;
       if (like != null) {
-        data['isLike'] = like;
+        data['tempOrder'] = like == 1;
       }
       final Map<String, dynamic> response = await requestClient.post(
         '/wx-zhibo-room-item/pageListAvailable',
@@ -68,6 +68,14 @@ class AnchorListController extends GetxController {
             'roomId': roomId,
             'ids': [item.sitem?.id ?? 0],
           });
+    });
+  }
+
+///立即前往
+  Future<bool> likeAnchor(AnchorListModel item) async {
+    return await request(() async {
+      await requestClient.post('/wx-zhibo-room-item/addOrder',
+          data: {'id': item.id});
     });
   }
 }

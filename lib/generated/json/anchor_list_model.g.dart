@@ -33,6 +33,18 @@ AnchorListModel $AnchorListModelFromJson(Map<String, dynamic> json) {
   if (sitem != null) {
     anchorListModel.sitem = sitem;
   }
+  final int? managerId = jsonConvert.convert<int>(json['managerId']);
+  if (managerId != null) {
+    anchorListModel.managerId = managerId;
+  }
+  final String? managerName = jsonConvert.convert<String>(json['managerName']);
+  if (managerName != null) {
+    anchorListModel.managerName = managerName;
+  }
+  final String? roomName0 = jsonConvert.convert<String>(json['roomName0']);
+  if (roomName0 != null) {
+    anchorListModel.roomName0 = roomName0;
+  }
   return anchorListModel;
 }
 
@@ -45,6 +57,9 @@ Map<String, dynamic> $AnchorListModelToJson(AnchorListModel entity) {
   data['userId'] = entity.userId;
   data['roonName'] = entity.roonName;
   data['sitem'] = entity.sitem?.toJson();
+  data['managerId'] = entity.managerId;
+  data['managerName'] = entity.managerName;
+  data['roomName0'] = entity.roomName0;
   return data;
 }
 
@@ -57,6 +72,9 @@ extension AnchorListModelExtension on AnchorListModel {
     int? userId,
     String? roonName,
     AnchorModel? sitem,
+    int? managerId,
+    String? managerName,
+    String? roomName0,
   }) {
     return AnchorListModel()
       ..id = id ?? this.id
@@ -65,6 +83,9 @@ extension AnchorListModelExtension on AnchorListModel {
       ..itemId = itemId ?? this.itemId
       ..userId = userId ?? this.userId
       ..roonName = roonName ?? this.roonName
-      ..sitem = sitem ?? this.sitem;
+      ..sitem = sitem ?? this.sitem
+      ..managerId = managerId ?? this.managerId
+      ..managerName = managerName ?? this.managerName
+      ..roomName0 = roomName0 ?? this.roomName0;
   }
 }
