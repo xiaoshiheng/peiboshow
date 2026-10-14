@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 import '../models/anchor_list_model.dart';
 import '../models/anchor_model.dart';
@@ -62,10 +63,25 @@ class _AnchorListPanelState extends State<AnchorListPanel> {
   late final AnchorListController _controller =
   Get.put(AnchorListController(roomId: widget.roomId), tag: _tag);
 
+  /// 下拉刷新控制器
+  final RefreshController _refreshController =
+      RefreshController(initialRefresh: false);
+
   @override
   void dispose() {
+    _refreshController.dispose();
     Get.delete<AnchorListController>(tag: _tag);
     super.dispose();
+  }
+
+  /// 下拉刷新
+  Future<void> _onRefresh() async {
+    final bool ok = await _controller.getAnchorList();
+    if (ok) {
+      _refreshController.refreshCompleted();
+    } else {
+      _refreshController.refreshFailed();
+    }
   }
 
   /// 移出直播间
@@ -157,21 +173,56 @@ class _AnchorListPanelState extends State<AnchorListPanel> {
 
   Widget _buildBody() {
     return Obx(() {
-      if (_controller.loading.value) {
-        return const Center(
-            child: CircularProgressIndicator(color: Colors.white));
-      }
-      if (_controller.anchors.isEmpty) {
-        return const Center(
-            child: Text('暂无主播', style: TextStyle(color: Colors.white54)));
-      }
-      return ListView.separated(
-        itemCount: _controller.anchors.length,
-        separatorBuilder: (_, __) =>
-        const Divider(height: 1, color: Colors.white12),
-        itemBuilder: (context, index) => _buildRow(_controller.anchors[index]),
+      return SmartRefresher(
+        controller: _refreshController,
+        enablePullDown: true,
+        enablePullUp: false,
+        header: const ClassicHeader(
+          textStyle: TextStyle(color: Colors.white70),
+          idleText: '下拉刷新',
+          releaseText: '释放立即刷新',
+          refreshingText: '刷新中...',
+          completeText: '刷新完成',
+          failedText: '刷新失败',
+        ),
+        onRefresh: _onRefresh,
+        child: _buildList(),
       );
     });
+  }
+
+  /// SmartRefresher 的 child 必须直接是可滚动组件(ScrollView),
+  /// 不能被 Obx/GetBuilder 包裹,否则会形成嵌套滚动导致下拉刷新失效
+  Widget _buildList() {
+    // 首次加载(列表为空且加载中)显示转圈
+    if (_controller.loading.value && _controller.anchors.isEmpty) {
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: const [
+          SizedBox(height: 120),
+          Center(child: CircularProgressIndicator(color: Colors.white)),
+        ],
+      );
+    }
+    if (_controller.anchors.isEmpty) {
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: const [
+          SizedBox(height: 80),
+          Center(
+            child: Text('暂无主播', style: TextStyle(color: Colors.white54)),
+          ),
+        ],
+      );
+    }
+    return ListView.separated(
+      physics: const AlwaysScrollableScrollPhysics(),
+      itemCount: _controller.anchors.length,
+      separatorBuilder: (_, __) =>
+      const Divider(height: 1, color: Colors.white12),
+      itemBuilder: (context, index) =>
+          _buildRow(_controller.anchors[index]),
+    );
   }
 
   Widget _buildRow(AnchorListModel item) {
