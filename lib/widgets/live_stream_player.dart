@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:get/get.dart';
 import '../models/live_room_model.dart';
 import '../pages/controller/danmu_controller.dart';
+import 'anchor_list_panel.dart';
 import 'danmu_view.dart';
 
 class LiveStreamPlayer extends StatefulWidget {
@@ -230,6 +231,29 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
               bottom: 24,
               height: 300,
               child: DanmuView(tag: _danmuTag),
+            ),
+
+          // 查看主播按钮:右下角,点击右侧划入半屏主播列表
+          if (widget.room.status == 1 && widget.room.id != null)
+            Positioned(
+              right: 16,
+              bottom: 24,
+              child: ElevatedButton.icon(
+                onPressed: () => Navigator.of(context)
+                    .push(AnchorListRoute(roomId: widget.room.id!)),
+                icon: const Icon(Icons.people_outline, size: 16),
+                label:
+                    const Text('查看主播', style: TextStyle(fontSize: 12)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black.withOpacity(0.5),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18)),
+                ),
+              ),
             ),
 
           // 播放失败浮层:置于 Stack 最顶层,保证重试按钮可点击
