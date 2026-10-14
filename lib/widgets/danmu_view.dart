@@ -109,6 +109,11 @@ class _DanmuViewState extends State<DanmuView> {
       return _systemLine('${danmu.newUserName ?? '游客'} 进入直播间');
     }
 
+    // type4: 内容消息(红色字体,字号比其他类型大 3 号)
+    if (danmu.messageType == DanMuMessageType.vipEnter) {
+      return _contentLine(danmu.content ?? '');
+    }
+
     // type2: 互动消息(评论 / 送礼 / 点赞)
     final hudong = danmu.hudongMsgVo;
     final name = hudong?.customerName ?? '用户';
@@ -124,15 +129,30 @@ class _DanmuViewState extends State<DanmuView> {
     return _richLine(name, ' 点了个赞', const Color(0xFFFF8A80));
   }
 
-  /// 系统提示行(type3 游客进入:红色字体,字号加大 2 号)
-  Widget _systemLine(String text) {
+  /// 内容消息行(type4:红色字体,字号比其他类型大 3 号 -> 14 + 3 = 17)
+  Widget _contentLine(String text) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Text(
         text,
         style: const TextStyle(
           color: Colors.red,
-          fontSize: 15,
+          fontSize: 17,
+          shadows: [Shadow(color: Colors.black54, blurRadius: 3)],
+        ),
+      ),
+    );
+  }
+
+  /// 系统提示行(type3 游客进入:弱化的灰色小字提示)
+  Widget _systemLine(String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.white60,
+          fontSize: 13,
           fontStyle: FontStyle.italic,
           shadows: [Shadow(color: Colors.black54, blurRadius: 3)],
         ),

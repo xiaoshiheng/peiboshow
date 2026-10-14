@@ -347,27 +347,50 @@ class _AnchorListPanelState extends State<AnchorListPanel> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (levelText.isNotEmpty)
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 4),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(colors: [
-                        Color(0xFFB14CF0),
-                        Color(0xFF8A2BE2),
-                      ]),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+                // 等级徽标 + 一见倾心登记信息(显示在等级右侧)
+                if (levelText.isNotEmpty || (item.managerId ?? 0) > 0)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
                     child: Row(
-                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.diamond_outlined,
-                            color: Colors.white, size: 12),
-                        const SizedBox(width: 2),
-                        Text(levelText,
-                            style: const TextStyle(
-                                color: Colors.white, fontSize: 10)),
+                        if (levelText.isNotEmpty)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(colors: [
+                                Color(0xFFB14CF0),
+                                Color(0xFF8A2BE2),
+                              ]),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.diamond_outlined,
+                                    color: Colors.white, size: 12),
+                                const SizedBox(width: 2),
+                                Text(levelText,
+                                    style: const TextStyle(
+                                        color: Colors.white, fontSize: 10)),
+                              ],
+                            ),
+                          ),
+                        if ((item.managerId ?? 0) > 0) ...[
+                          if (levelText.isNotEmpty) const SizedBox(width: 6),
+                          const Icon(Icons.favorite,
+                              color: Color(0xFFFF4D6D), size: 12),
+                          const SizedBox(width: 2),
+                          Flexible(
+                            child: Text(
+                              '${item.managerName ?? ''}-${item.roomName0 ?? ''}',
+                              style: const TextStyle(
+                                  color: Colors.white70, fontSize: 10),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),

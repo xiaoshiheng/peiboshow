@@ -25,6 +25,10 @@ DanMuModel $DanMuModelFromJson(Map<String, dynamic> json) {
   if (newUserName != null) {
     danMuModel.newUserName = newUserName;
   }
+  final String? content = jsonConvert.convert<String>(json['content']);
+  if (content != null) {
+    danMuModel.content = content;
+  }
   return danMuModel;
 }
 
@@ -34,6 +38,7 @@ Map<String, dynamic> $DanMuModelToJson(DanMuModel entity) {
   data['hudongMsgVo'] = entity.hudongMsgVo?.toJson();
   data['zhiboRoomVo'] = entity.zhiboRoomVo?.toJson();
   data['newUserName'] = entity.newUserName;
+  data['content'] = entity.content;
   return data;
 }
 
@@ -43,11 +48,13 @@ extension DanMuModelExtension on DanMuModel {
     HuDongDanMuModel? hudongMsgVo,
     LiveRoomDanMuModel? zhiboRoomVo,
     String? newUserName,
+    String? content,
   }) {
     return DanMuModel()
       ..messageType = messageType ?? this.messageType
       ..hudongMsgVo = hudongMsgVo ?? this.hudongMsgVo
       ..zhiboRoomVo = zhiboRoomVo ?? this.zhiboRoomVo
-      ..newUserName = newUserName ?? this.newUserName;
+      ..newUserName = newUserName ?? this.newUserName
+      ..content = content ?? this.content;
   }
 }

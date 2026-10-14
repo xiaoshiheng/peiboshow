@@ -22,6 +22,9 @@ class DanMuMessageType {
 
   /// 3: 游客进入直播间提示
   static const int enter = 3;
+
+  /// 4: vip会员进入直播间提示
+  static const int vipEnter = 4;
 }
 
 /// 单个直播间的弹幕控制器,通过 GetX tag = roomId 区分不同房间
@@ -132,7 +135,8 @@ class DanmuController extends GetxController {
           break;
         case DanMuMessageType.hudong:
         case DanMuMessageType.enter:
-          // type2 / type3: 加入滚动弹幕列表
+        case DanMuMessageType.vipEnter:
+          // type2 / type3: / type4:加入滚动弹幕列表
           messages.add(danmu);
           if (messages.length > _maxMessages) {
             messages.removeRange(0, messages.length - _maxMessages);
