@@ -39,6 +39,12 @@ class DanmuController extends GetxController {
   /// 直播间实时状态:存放最新一条 type1 数据(在线人数/点赞等)
   final Rxn<LiveRoomDanMuModel> roomInfo = Rxn<LiveRoomDanMuModel>();
 
+  /// 顶部滚动弹幕(类型4)当前正在展示的内容,null 表示无
+  final Rxn<String> topBanner = Rxn<String>();
+
+  /// 顶部滚动弹幕等待队列:正在滚动时新到的类型4消息在此排队
+  final List<String> _bannerQueue = <String>[];
+
   /// 连接状态
   final RxBool connected = false.obs;
 
@@ -114,6 +120,12 @@ class DanmuController extends GetxController {
     _channel?.sink.add(payload);
   }
 
+  /// 顶部弹幕滚动结束:由视图层动画完成时回调,展示队列中的下一条
+  void onTopBannerFinished() {
+    topBanner.value = null;
+    _showNextTopBanner();
+  }
+
   // ================= 内部实现 =================
 
   /// 按 messageType 分流处理
@@ -125,7 +137,9 @@ class DanmuController extends GetxController {
       if (danmu.messageType == 3) {
         debugPrint('⚠️ [Danmu] 收到进入提示: ${danmu.hudongMsgVo}');
       };
-
+      if (danmu.messageType == 4) {
+        debugPrint('⚠️ [Danmu] 收到进入提示: ${danmu.content}');
+      }
       switch (danmu.messageType) {
         case DanMuMessageType.room:
           // type1: 更新直播间实时状态
@@ -135,8 +149,16 @@ class DanmuController extends GetxController {
           break;
         case DanMuMessageType.hudong:
         case DanMuMessageType.enter:
+          // type2 / type3:加入滚动弹幕列表
+          messages.add(danmu);
+          if (messages.length > _maxMessages) {
+            messages.removeRange(0, messages.length - _maxMessages);
+          }
+          break;
         case DanMuMessageType.vipEnter:
-          // type2 / type3: / type4:加入滚动弹幕列表
+          // type4:①直播间顶部滚动弹幕(红色),多条时排队等待
+          _enqueueTopBanner(danmu.content ?? '');
+          // ②同时加入底部弹幕列表展示
           messages.add(danmu);
           if (messages.length > _maxMessages) {
             messages.removeRange(0, messages.length - _maxMessages);
@@ -198,6 +220,21 @@ class DanmuController extends GetxController {
     _heartbeatTimer = null;
   }
 
+  /// 收到类型4弹幕:入队,若当前无滚动则立即展示
+  void _enqueueTopBanner(String content) {
+    final String text = content.trim();
+    if (text.isEmpty) return;
+    _bannerQueue.add(text);
+    _showNextTopBanner();
+  }
+
+  /// 展示队列中的下一条(仅当前无滚动时切换,否则排队等待)
+  void _showNextTopBanner() {
+    if (topBanner.value != null) return; // 正在滚动,排队等待
+    if (_bannerQueue.isEmpty) return;
+    topBanner.value = _bannerQueue.removeAt(0);
+  }
+
   /// 指数退避重连,最多 5 次
   void _scheduleReconnect() {
     if (_manualClose || _reconnectAttempts >= 5) return;
@@ -219,6 +256,9 @@ class DanmuController extends GetxController {
     _channel?.sink.close();
     _channel = null;
     connected.value = false;
+    // 清空顶部弹幕队列与当前展示
+    _bannerQueue.clear();
+    topBanner.value = null;
   }
 
   @override

@@ -6,6 +6,7 @@ import '../models/live_room_model.dart';
 import '../pages/controller/danmu_controller.dart';
 import 'anchor_list_panel.dart';
 import 'danmu_view.dart';
+import 'top_banner_marquee.dart';
 
 class LiveStreamPlayer extends StatefulWidget {
   final LiveRoomModel room;
@@ -220,6 +221,18 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
             ),
 
           if (!_isPlaying && _isInitialized) Center(child: Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.black.withOpacity(0.5), shape: BoxShape.circle), child: const Icon(Icons.play_arrow, color: Colors.white, size: 48))),
+
+          // 顶部滚动弹幕(类型4):红色跑马灯,多条自动排队
+          if (widget.room.status == 1 &&
+              widget.isActive &&
+              Get.isRegistered<DanmuController>(tag: _danmuTag))
+            Positioned(
+              left: 0,
+              right: 0,
+              top: 12,
+              height: 24,
+              child: TopBannerMarquee(tag: _danmuTag),
+            ),
 
           // 弹幕层:仅在直播中、页面激活且控制器已注册时显示
           if (widget.room.status == 1 &&
