@@ -39,6 +39,10 @@ AnchorModel $AnchorModelFromJson(Map<String, dynamic> json) {
   if (height != null) {
     anchorModel.height = height;
   }
+  final int? isLike = jsonConvert.convert<int>(json['isLike']);
+  if (isLike != null) {
+    anchorModel.isLike = isLike;
+  }
   return anchorModel;
 }
 
@@ -53,6 +57,7 @@ Map<String, dynamic> $AnchorModelToJson(AnchorModel entity) {
   data['zhiboRoomId'] = entity.zhiboRoomId;
   data['age'] = entity.age;
   data['height'] = entity.height;
+  data['isLike'] = entity.isLike;
   return data;
 }
 
@@ -67,6 +72,7 @@ extension AnchorModelExtension on AnchorModel {
     String? zhiboRoomId,
     int? age,
     int? height,
+    int? isLike,
   }) {
     return AnchorModel()
       ..id = id ?? this.id
@@ -77,6 +83,7 @@ extension AnchorModelExtension on AnchorModel {
       ..picUrl = picUrl ?? this.picUrl
       ..zhiboRoomId = zhiboRoomId ?? this.zhiboRoomId
       ..age = age ?? this.age
-      ..height = height ?? this.height;
+      ..height = height ?? this.height
+      ..isLike = isLike ?? this.isLike;
   }
 }

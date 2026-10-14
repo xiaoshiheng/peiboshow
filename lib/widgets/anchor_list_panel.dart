@@ -84,6 +84,14 @@ class _AnchorListPanelState extends State<AnchorListPanel> {
     }
   }
 
+  /// 点击筛选按钮
+  Future<void> _onFilterTap(int? value) async {
+    final bool ok = await _controller.setLikeFilter(value);
+    if (!ok) {
+      SmartDialog.showToast('筛选失败');
+    }
+  }
+
   /// 移出直播间
   Future<void> _onRemove(AnchorListModel item) async {
     final name = item.sitem?.title ?? '该主播';
@@ -114,8 +122,37 @@ class _AnchorListPanelState extends State<AnchorListPanel> {
       SmartDialog.showToast('已移出直播间');
       _controller.getAnchorList();
     } else {
-      SmartDialog.showToast('移出直播间接口待接入');
+      SmartDialog.showToast('移出直播间失败');
     }
+  }
+
+  /// 确认前往(isLike==1 时显示)
+  Future<void> _onConfirmGo(AnchorListModel item) async {
+    final name = item.sitem?.title ?? '该主播';
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xFF2A2A2C),
+        title: const Text('提示',
+            style: TextStyle(color: Colors.white, fontSize: 16)),
+        content: Text('确定前往 $name 吗?',
+            style: const TextStyle(color: Colors.white70, fontSize: 14)),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('取消',
+                  style: TextStyle(color: Colors.white54))),
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('确定',
+                  style: TextStyle(color: Color(0xFF2ECC71)))),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+
+    // TODO: 接入"确认前往"业务逻辑
+    SmartDialog.showToast('确认前往');
   }
 
   void _openViewer(AnchorModel anchor) {
@@ -162,9 +199,55 @@ class _AnchorListPanelState extends State<AnchorListPanel> {
                   ),
                 ),
                 const Divider(height: 1, color: Colors.white24),
+                _buildFilterBar(),
+                const Divider(height: 1, color: Colors.white24),
                 Expanded(child: _buildBody()),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 顶部筛选栏:全部 / 已一见倾心 / 未一见倾心
+  Widget _buildFilterBar() {
+    return Obx(() {
+      final int? current = _controller.likeFilter.value;
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Row(
+          children: [
+            _buildFilterChip('全部', null, current),
+            const SizedBox(width: 8),
+            _buildFilterChip('已一见倾心', 1, current),
+            const SizedBox(width: 8),
+            _buildFilterChip('未一见倾心', 0, current),
+          ],
+        ),
+      );
+    });
+  }
+
+  Widget _buildFilterChip(String label, int? value, int? current) {
+    final bool selected = current == value;
+    return GestureDetector(
+      onTap: () => _onFilterTap(value),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xFFFF4D6D) : Colors.white10,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: selected ? const Color(0xFFFF4D6D) : Colors.white24,
+            width: 0.8,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? Colors.white : Colors.white70,
+            fontSize: 12,
           ),
         ),
       ),
@@ -220,8 +303,15 @@ class _AnchorListPanelState extends State<AnchorListPanel> {
       itemCount: _controller.anchors.length,
       separatorBuilder: (_, __) =>
       const Divider(height: 1, color: Colors.white12),
-      itemBuilder: (context, index) =>
-          _buildRow(_controller.anchors[index]),
+      itemBuilder: (context, index) {
+        AnchorListModel item = _controller.anchors[index];
+        if (index==0){
+          item.sitem?.isLike = 1;
+        }
+          return _buildRow(item);
+        return const SizedBox.shrink();
+      }
+          // _buildRow(_controller.anchors[index]),
     );
   }
 
@@ -293,24 +383,53 @@ class _AnchorListPanelState extends State<AnchorListPanel> {
             ),
           ),
           const SizedBox(width: 8),
-          // 右侧唯一按钮:移出直播间
-          SizedBox(
-            width: 64,
-            child: OutlinedButton(
-              onPressed: () => _onRemove(item),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFFFF4D6D),
-                side: const BorderSide(color: Color(0xFFFF4D6D), width: 0.8),
-                padding:
-                const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-                minimumSize: const Size(0, 0),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                textStyle: const TextStyle(fontSize: 10),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+          // 右侧按钮区:isLike==1 时额外显示绿色"确认前往"按钮
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              if (anchor?.isLike == 1) ...[
+                SizedBox(
+                  width: 64,
+                  child: OutlinedButton(
+                    onPressed: () => _onConfirmGo(item),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF2ECC71),
+                      side: const BorderSide(
+                          color: Color(0xFF2ECC71), width: 0.8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 4, vertical: 6),
+                      minimumSize: const Size(0, 0),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      textStyle: const TextStyle(fontSize: 10),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text('确认前往', maxLines: 1),
+                  ),
+                ),
+                const SizedBox(height: 6),
+              ],
+              SizedBox(
+                width: 64,
+                child: OutlinedButton(
+                  onPressed: () => _onRemove(item),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFFFF4D6D),
+                    side:
+                        const BorderSide(color: Color(0xFFFF4D6D), width: 0.8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                    minimumSize: const Size(0, 0),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    textStyle: const TextStyle(fontSize: 10),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('移出直播间', maxLines: 1),
+                ),
               ),
-              child: const Text('移出直播间', maxLines: 1),
-            ),
+            ],
           ),
         ],
       ),
