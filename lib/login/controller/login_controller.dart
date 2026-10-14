@@ -109,7 +109,7 @@ class LoginController extends GetxController {
     debugPrint('登录手机号: ${phoneController.text.trim()}');
     debugPrint('登录验证码: ${codeController.text.trim()}');
     request(()async{
-      Map<String, dynamic> response = await requestClient.post("/vloginCustomer",data: {"mobile":phoneController.text,"vcode":codeController.text});
+      Map<String, dynamic> response = await requestClient.post("/vlogin",data: {"mobile":phoneController.text,"vcode":codeController.text});
       print(response);
       globalController.userModel = UserModel.fromJson(response["user"]);
       globalController.token = response["token"];

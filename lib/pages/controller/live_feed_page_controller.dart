@@ -51,11 +51,12 @@ class LiveFeedPageController extends GetxController {
     try {
       final bool ok = await request(() async {
         final Map<String, dynamic> data = await requestClient.post(
-          "/c-zhibo-room/pageList",
+          "//wx-zhibo-room/pageList",
           data: {
             "page": _page,
             "size": _pageSize,
             "companyId": globalController.userModel?.companyId ?? "",
+            "isIng": 1,
           },
         );
 
