@@ -37,4 +37,13 @@ class GlobalController extends GetxController {
     this.token = token;
     this.userModel = userModel;
   }
+
+  ///退出登录，清除本地token和用户信息
+  Future<void> logout() async {
+    NSUserDefault userDefault = await NSUserDefault.getInstance();
+    await userDefault.removeValueForKey("token");
+    await userDefault.removeValueForKey("userModel");
+    token = null;
+    userModel = null;
+  }
 }

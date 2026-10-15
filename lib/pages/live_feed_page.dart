@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
+import '../global_contoller/global_controller.dart';
 import '../models/live_room_model.dart';
+import '../routes/all_routes.dart';
 import '../widgets/live_stream_player.dart';
 import 'controller/live_feed_page_controller.dart';
 import 'live_room_list_view.dart';
@@ -87,6 +89,34 @@ class _LiveFeedPageState extends State<LiveFeedPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.logout, color: Colors.white),
+          tooltip: '退出登录',
+          onPressed: () async {
+            final confirmed = await showDialog<bool>(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                title: const Text('退出登录'),
+                content: const Text('确定要退出登录吗？'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(false),
+                    child: const Text('取消'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(true),
+                    child: const Text('确定', style: TextStyle(color: Colors.red)),
+                  ),
+                ],
+              ),
+            );
+            if (confirmed == true) {
+              final globalController = Get.find<GlobalController>();
+              await globalController.logout();
+              Get.offAllNamed(AllRoutes.login);
+            }
+          },
+        ),
         title: const Text(
           '直播广场',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
