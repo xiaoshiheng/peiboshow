@@ -170,6 +170,8 @@ class _AddAnchorPanelState extends State<AddAnchorPanel> {
         await _controller.getAnchorList();
       } else {
         SmartDialog.showToast('添加失败');
+        _selectedIds.clear();
+        await _controller.getAnchorList();
       }
     } finally {
       if (mounted) setState(() => _submitting = false);

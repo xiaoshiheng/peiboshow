@@ -19,9 +19,10 @@ bool handleException(ApiException exception, {bool Function(ApiException)? onErr
   if(isShowLoading){
     if(exception.code == 10001){
       SmartDialog.showNotify(msg: exception.message ?? ApiException.unknownException, notifyType: NotifyType.success);
-      return false;
+      return true;
     }
-    SmartDialog.showNotify(msg: exception.message ?? ApiException.unknownException, notifyType: NotifyType.error);
+    // SmartDialog.showNotify(msg: exception.message ?? ApiException.unknownException, notifyType: NotifyType.error);
+    SmartDialog.showToast( exception.message ?? ApiException.unknownException);
   }else{
     SmartDialog.showToast( exception.message ?? ApiException.unknownException);
   }

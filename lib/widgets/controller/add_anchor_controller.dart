@@ -47,12 +47,12 @@ class AddAnchorController extends GetxController {
         'ids': ids,
         'roomId': roomId,
       };
-      final Map<String, dynamic> response = await requestClient.post(
+      final dynamic response = await requestClient.post(
         '/wx-zhibo-room-item/joinBatch',
         data: data,
       );
       print(response);
-    }, showLoading: false);
+    }, showLoading: true);
     loading.value = false;
     return ok;
   }
