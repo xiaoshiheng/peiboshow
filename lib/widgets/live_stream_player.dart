@@ -147,164 +147,153 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        if (_isPlaying) {
-          _pause();
-        } else {
-          _play();
-        }
-      },
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          if (_isInitialized && !_hasError && _player != null)
-            FijkView(player: _player!, color: Colors.black, panelBuilder: (_, __, ___, ____, _____) => Container())
-          else
-            CachedNetworkImage(imageUrl: widget.room.picUrl ?? "", fit: BoxFit.cover, placeholder: (context, url) => Container(color: Colors.black, child: const Center(child: CircularProgressIndicator(color: Colors.white))), errorWidget: (context, url, error) => Container(color: Colors.black, child: const Icon(Icons.error, color: Colors.white))),
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        if (_isInitialized && !_hasError && _player != null)
+          FijkView(player: _player!, color: Colors.black, panelBuilder: (_, __, ___, ____, _____) => Container())
+        else
+          CachedNetworkImage(imageUrl: widget.room.picUrl ?? "", fit: BoxFit.cover, placeholder: (context, url) => Container(color: Colors.black, child: const Center(child: CircularProgressIndicator(color: Colors.white))), errorWidget: (context, url, error) => Container(color: Colors.black, child: const Icon(Icons.error, color: Colors.white))),
 
-          // 纯装饰渐变层:禁用命中测试,避免遮挡下层按钮点击
-          IgnorePointer(
-            child: Container(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.black.withOpacity(0.4), Colors.transparent, Colors.black.withOpacity(0.7)], stops: const [0.0, 0.3, 1.0]))),
-          ),
+        // 纯装饰渐变层:禁用命中测试,避免遮挡下层按钮点击
+        IgnorePointer(
+          child: Container(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.black.withOpacity(0.4), Colors.transparent, Colors.black.withOpacity(0.7)], stops: const [0.0, 0.3, 1.0]))),
+        ),
 
-          if (widget.room.status == 1)
-            Positioned(
-              left: 16,
-              top: 50,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 220),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.circle, color: Colors.white, size: 8),
-                          SizedBox(width: 4),
-                          Text(
-                            'LIVE',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
+        if (widget.room.status == 1)
+          Positioned(
+            left: 16,
+            top: 50,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 220),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(4),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      widget.room.roomName ?? '',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        shadows: [
-                          Shadow(color: Colors.black54, blurRadius: 4),
-                        ],
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-          if (!_isPlaying && _isInitialized) Center(child: Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.black.withOpacity(0.5), shape: BoxShape.circle), child: const Icon(Icons.play_arrow, color: Colors.white, size: 48))),
-
-          // 顶部滚动弹幕(类型4):红色跑马灯,多条自动排队
-          if (widget.room.status == 1 &&
-              widget.isActive &&
-              Get.isRegistered<DanmuController>(tag: _danmuTag))
-            Positioned(
-              left: 0,
-              right: 0,
-              top: 12,
-              height: 24,
-              child: TopBannerMarquee(tag: _danmuTag),
-            ),
-
-          // 弹幕层:仅在直播中、页面激活且控制器已注册时显示
-          if (widget.room.status == 1 &&
-              widget.isActive &&
-              Get.isRegistered<DanmuController>(tag: _danmuTag))
-            Positioned(
-              left: 16,
-              right: 16,
-              bottom: 24,
-              height: 300,
-              child: DanmuView(tag: _danmuTag),
-            ),
-
-          // 查看主播按钮:右下角,点击右侧划入半屏主播列表
-          if (widget.room.status == 1 && widget.room.id != null)
-            Positioned(
-              right: 16,
-              bottom: 24,
-              child: ElevatedButton.icon(
-                onPressed: () => Navigator.of(context)
-                    .push(AnchorListRoute(roomId: widget.room.id!)),
-                icon: const Icon(Icons.people_outline, size: 16),
-                label:
-                    const Text('查看主播', style: TextStyle(fontSize: 12)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black.withOpacity(0.5),
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 8),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18)),
-                ),
-              ),
-            ),
-
-          // 播放失败浮层:置于 Stack 最顶层,保证重试按钮可点击
-          if (_hasError)
-            Positioned.fill(
-              child: Container(
-                color: Colors.black87,
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(32),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.error_outline,
-                            color: Colors.red, size: 48),
-                        const SizedBox(height: 16),
-                        const Text('播放失败',
-                            style: TextStyle(
-                                color: Colors.white, fontSize: 16)),
-                        const SizedBox(height: 8),
-                        Text(_errorMessage,
-                            style: const TextStyle(
-                                color: Colors.grey, fontSize: 12),
-                            textAlign: TextAlign.center,
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                            onPressed: _retry,
-                            child: const Text('重试')),
+                        Icon(Icons.circle, color: Colors.white, size: 8),
+                        SizedBox(width: 4),
+                        Text(
+                          'LIVE',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ],
                     ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    widget.room.roomName ?? '',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      shadows: [
+                        Shadow(color: Colors.black54, blurRadius: 4),
+                      ],
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+        // 顶部滚动弹幕(类型4):红色跑马灯,多条自动排队
+        if (widget.room.status == 1 &&
+            widget.isActive &&
+            Get.isRegistered<DanmuController>(tag: _danmuTag))
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 12,
+            height: 24,
+            child: TopBannerMarquee(tag: _danmuTag),
+          ),
+
+        // 弹幕层:仅在直播中、页面激活且控制器已注册时显示
+        if (widget.room.status == 1 &&
+            widget.isActive &&
+            Get.isRegistered<DanmuController>(tag: _danmuTag))
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 24,
+            height: 300,
+            child: DanmuView(tag: _danmuTag),
+          ),
+
+        // 查看主播按钮:右下角,点击右侧划入半屏主播列表
+        if (widget.room.status == 1 && widget.room.id != null)
+          Positioned(
+            right: 16,
+            bottom: 24,
+            child: ElevatedButton.icon(
+              onPressed: () => Navigator.of(context)
+                  .push(AnchorListRoute(roomId: widget.room.id!)),
+              icon: const Icon(Icons.people_outline, size: 16),
+              label:
+                  const Text('查看主播', style: TextStyle(fontSize: 12)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.black.withOpacity(0.5),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 12, vertical: 8),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18)),
+              ),
+            ),
+          ),
+
+        // 播放失败浮层:置于 Stack 最顶层,保证重试按钮可点击
+        if (_hasError)
+          Positioned.fill(
+            child: Container(
+              color: Colors.black87,
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline,
+                          color: Colors.red, size: 48),
+                      const SizedBox(height: 16),
+                      const Text('播放失败',
+                          style: TextStyle(
+                              color: Colors.white, fontSize: 16)),
+                      const SizedBox(height: 8),
+                      Text(_errorMessage,
+                          style: const TextStyle(
+                              color: Colors.grey, fontSize: 12),
+                          textAlign: TextAlign.center,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                          onPressed: _retry,
+                          child: const Text('重试')),
+                    ],
                   ),
                 ),
               ),
             ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 
