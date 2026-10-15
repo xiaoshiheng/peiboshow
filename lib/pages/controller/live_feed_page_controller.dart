@@ -79,4 +79,12 @@ class LiveFeedPageController extends GetxController {
       _loading = false;
     }
   }
+
+  /// 成为房间管理员
+  Future<bool> becomeRoomAdmin(String roomId) async {
+    return await request(() async {
+      await requestClient.get("/wx-zhibo-room/setAdmin/${roomId}");
+      return true;
+    });
+  }
 }

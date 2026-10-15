@@ -172,6 +172,10 @@ LiveRoomModel $LiveRoomModelFromJson(Map<String, dynamic> json) {
   if (zhiboNumEnd != null) {
     liveRoomModel.zhiboNumEnd = zhiboNumEnd;
   }
+  final int? isAdmin = jsonConvert.convert<int>(json['isAdmin']);
+  if (isAdmin != null) {
+    liveRoomModel.isAdmin = isAdmin;
+  }
   return liveRoomModel;
 }
 
@@ -218,6 +222,7 @@ Map<String, dynamic> $LiveRoomModelToJson(LiveRoomModel entity) {
   data['isFull'] = entity.isFull;
   data['zhiboNumStart'] = entity.zhiboNumStart;
   data['zhiboNumEnd'] = entity.zhiboNumEnd;
+  data['isAdmin'] = entity.isAdmin;
   return data;
 }
 
@@ -264,6 +269,7 @@ extension LiveRoomModelExtension on LiveRoomModel {
     int? isFull,
     int? zhiboNumStart,
     int? zhiboNumEnd,
+    int? isAdmin,
   }) {
     return LiveRoomModel()
       ..id = id ?? this.id
@@ -306,6 +312,7 @@ extension LiveRoomModelExtension on LiveRoomModel {
       ..itemOnline = itemOnline ?? this.itemOnline
       ..isFull = isFull ?? this.isFull
       ..zhiboNumStart = zhiboNumStart ?? this.zhiboNumStart
-      ..zhiboNumEnd = zhiboNumEnd ?? this.zhiboNumEnd;
+      ..zhiboNumEnd = zhiboNumEnd ?? this.zhiboNumEnd
+      ..isAdmin = isAdmin ?? this.isAdmin;
   }
 }

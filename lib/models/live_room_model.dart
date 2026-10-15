@@ -48,6 +48,7 @@ class LiveRoomModel {
 	int? isFull;
 	int? zhiboNumStart;
 	int? zhiboNumEnd;
+	int? isAdmin;
 
 
 	LiveRoomModel();

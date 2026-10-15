@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:fijkplayer/fijkplayer.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import '../models/live_room_model.dart';
 import '../pages/controller/danmu_controller.dart';
+import '../pages/controller/live_feed_page_controller.dart';
 import 'add_anchor_panel.dart';
 import 'anchor_list_panel.dart';
 import 'danmu_view.dart';
@@ -146,6 +148,29 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
     }
   }
 
+  /// 是否正在申请成为房管,防止重复点击
+  bool _becomingAdmin = false;
+
+  /// 成为房管点击事件
+  Future<void> _onBecomeAdmin() async {
+    final int? roomId = widget.room.id;
+    if (roomId == null || _becomingAdmin) return;
+    _becomingAdmin = true;
+    try {
+      final LiveFeedPageController controller =
+          Get.find<LiveFeedPageController>();
+      final bool ok = await controller.becomeRoomAdmin(roomId.toString());
+      if (!mounted) return;
+      if (ok) {
+        SmartDialog.showToast('成为房管成功');
+        // 同步更新本地房间状态,成为房管按钮立即隐藏
+        setState(() => widget.room.isAdmin = 1);
+      }
+    } finally {
+      if (mounted) _becomingAdmin = false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -223,6 +248,27 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
             top: 12,
             height: 24,
             child: TopBannerMarquee(tag: _danmuTag),
+          ),
+
+        // 右上角成为房管按钮:isAdmin==1(已是当前直播间管理员)时隐藏
+        if ((widget.room.isAdmin ?? 0) != 1)
+          Positioned(
+            right: 16,
+            top: 44,
+            child: ElevatedButton.icon(
+              onPressed: _onBecomeAdmin,
+              icon: const Icon(Icons.admin_panel_settings_outlined, size: 16),
+              label: const Text('成为房管', style: TextStyle(fontSize: 12)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.black.withOpacity(0.5),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 12, vertical: 8),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18)),
+              ),
+            ),
           ),
 
         // 弹幕层:仅在直播中、页面激活且控制器已注册时显示
