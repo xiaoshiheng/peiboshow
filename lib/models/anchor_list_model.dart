@@ -17,6 +17,7 @@ class AnchorListModel {
 	int? managerId;
 	String? managerName;
 	String? roomName0;
+	String? preOrderTime;
 
 	AnchorListModel();
 

@@ -45,6 +45,11 @@ AnchorListModel $AnchorListModelFromJson(Map<String, dynamic> json) {
   if (roomName0 != null) {
     anchorListModel.roomName0 = roomName0;
   }
+  final String? preOrderTime = jsonConvert.convert<String>(
+      json['preOrderTime']);
+  if (preOrderTime != null) {
+    anchorListModel.preOrderTime = preOrderTime;
+  }
   return anchorListModel;
 }
 
@@ -60,6 +65,7 @@ Map<String, dynamic> $AnchorListModelToJson(AnchorListModel entity) {
   data['managerId'] = entity.managerId;
   data['managerName'] = entity.managerName;
   data['roomName0'] = entity.roomName0;
+  data['preOrderTime'] = entity.preOrderTime;
   return data;
 }
 
@@ -75,6 +81,7 @@ extension AnchorListModelExtension on AnchorListModel {
     int? managerId,
     String? managerName,
     String? roomName0,
+    String? preOrderTime,
   }) {
     return AnchorListModel()
       ..id = id ?? this.id
@@ -86,6 +93,7 @@ extension AnchorListModelExtension on AnchorListModel {
       ..sitem = sitem ?? this.sitem
       ..managerId = managerId ?? this.managerId
       ..managerName = managerName ?? this.managerName
-      ..roomName0 = roomName0 ?? this.roomName0;
+      ..roomName0 = roomName0 ?? this.roomName0
+      ..preOrderTime = preOrderTime ?? this.preOrderTime;
   }
 }

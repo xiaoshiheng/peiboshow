@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'anchor_model.dart';
+import 'anchor_list_model.dart';
 
 /// AnchorModel 的展示层扩展(单独文件,插件重新生成 model 不会丢失)
 extension AnchorModelExt on AnchorModel {
@@ -38,5 +39,17 @@ extension AnchorModelExt on AnchorModel {
       if (height != null) '${height}cm',
     ];
     return parts.join('  ');
+  }
+}
+
+/// AnchorListModel 的展示层扩展(单独文件,插件重新生成 model 不会丢失)
+extension AnchorListModelExt on AnchorListModel {
+  /// 下单时间格式化为 HH:mm
+  String get orderTimeHM {
+    final String? t = preOrderTime;
+    if (t == null || t.isEmpty) return '';
+    final DateTime? parsed = DateTime.tryParse(t);
+    if (parsed == null) return t;
+    return '${parsed.hour.toString().padLeft(2, '0')}:${parsed.minute.toString().padLeft(2, '0')}';
   }
 }

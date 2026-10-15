@@ -383,12 +383,13 @@ class _AddAnchorPanelState extends State<AddAnchorPanel> {
                     ],
                   ),
                   const SizedBox(height: 6),
-                  Text(
-                    item.level ?? '',
-                    style: const TextStyle(color: Colors.white70, fontSize: 12),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  if (item.levelText.isNotEmpty)
+                    Text(
+                      item.levelText,
+                      style: const TextStyle(color: Colors.white70, fontSize: 12),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   const SizedBox(height: 6),
                   Text(
                     '${item.processCN ?? ''}/${item.statusCN ?? ''}',

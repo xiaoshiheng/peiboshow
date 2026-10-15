@@ -321,7 +321,21 @@ class _AnchorListPanelState extends State<AnchorListPanel> {
     final anchor = item.sitem;
     final urls = anchor?.picUrls ?? const <String>[];
     final levelText = anchor?.levelText ?? '';
-    final subText = anchor?.subText ?? '';
+    final bool hasManager = (item.managerId ?? 0) > 0;
+
+    /// 第一行后缀:等级 + 年龄 + 身高,如「永恒钻石 27岁 165cm」
+    final String suffix = [
+      if (levelText.isNotEmpty) levelText,
+      if (anchor?.age != null) '${anchor!.age}岁',
+      if (anchor?.height != null) '${anchor!.height}cm',
+    ].join(' ');
+
+    /// 第二行:一见倾心红心标记 + 房间 · 房管 · 下单时间
+    final String infoLine = [
+      item.roomName0 ?? '',
+      item.managerName ?? '',
+      item.orderTimeHM,
+    ].where((s) => s.isNotEmpty).join(' · ');
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -331,13 +345,13 @@ class _AnchorListPanelState extends State<AnchorListPanel> {
           GestureDetector(
             onTap: anchor == null ? null : () => _openViewer(anchor),
             child: CircleAvatar(
-              radius: 24,
+              radius: 28,
               backgroundColor: Colors.white24,
               backgroundImage: urls.isEmpty
                   ? null
                   : CachedNetworkImageProvider(urls.first),
               child: urls.isEmpty
-                  ? const Icon(Icons.person, color: Colors.white54, size: 24)
+                  ? const Icon(Icons.person, color: Colors.white54, size: 28)
                   : null,
             ),
           ),
@@ -347,63 +361,44 @@ class _AnchorListPanelState extends State<AnchorListPanel> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                // 等级徽标 + 一见倾心登记信息(显示在等级右侧)
-                if (levelText.isNotEmpty || (item.managerId ?? 0) > 0)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Row(
-                      children: [
-                        if (levelText.isNotEmpty)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(colors: [
-                                Color(0xFFB14CF0),
-                                Color(0xFF8A2BE2),
-                              ]),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.diamond_outlined,
-                                    color: Colors.white, size: 12),
-                                const SizedBox(width: 2),
-                                Text(levelText,
-                                    style: const TextStyle(
-                                        color: Colors.white, fontSize: 10)),
-                              ],
-                            ),
-                          ),
-                        if ((item.managerId ?? 0) > 0) ...[
-                          if (levelText.isNotEmpty) const SizedBox(width: 6),
-                          const Icon(Icons.favorite,
-                              color: Color(0xFFFF4D6D), size: 12),
-                          const SizedBox(width: 2),
-                          Flexible(
-                            child: Text(
-                              '${item.managerName ?? ''}-${item.roomName0 ?? ''}',
-                              style: const TextStyle(
-                                  color: Colors.white70, fontSize: 10),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ],
+                // 第一行:昵称 ·等级 年龄
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(anchor?.title ?? '未命名',
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis),
                     ),
+                    if (suffix.isNotEmpty)
+                      Text(' ·$suffix',
+                          style: const TextStyle(
+                              color: Colors.white70, fontSize: 12),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis),
+                  ],
+                ),
+                // 第二行:一见倾心红心标记 + 房间 · 房管 · 下单时间
+                if (infoLine.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      const Icon(Icons.favorite,
+                          color: Color(0xFFFF4D6D), size: 12),
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(infoLine,
+                            style: const TextStyle(
+                                color: Colors.white54, fontSize: 12),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis),
+                      ),
+                    ],
                   ),
-                Text(anchor?.title ?? '未命名',
-                    style: const TextStyle(color: Colors.white, fontSize: 14),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis),
-                if (subText.isNotEmpty)
-                  Text(subText,
-                      style:
-                      const TextStyle(color: Colors.white54, fontSize: 12),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis),
+                ],
               ],
             ),
           ),
@@ -413,22 +408,22 @@ class _AnchorListPanelState extends State<AnchorListPanel> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              if ((item.managerId ?? 0) > 0) ...[
+              if (hasManager) ...[
                 SizedBox(
-                  width: 64,
-                  child: OutlinedButton(
+                  width: 68,
+                  child: ElevatedButton(
                     onPressed: () => _onConfirmGo(item),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF2ECC71),
-                      side: const BorderSide(
-                          color: Color(0xFF2ECC71), width: 0.8),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2ECC71),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 4, vertical: 6),
                       minimumSize: const Size(0, 0),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       textStyle: const TextStyle(fontSize: 10),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(6)),
                     ),
                     child: const Text('确认前往', maxLines: 1),
                   ),
@@ -436,22 +431,22 @@ class _AnchorListPanelState extends State<AnchorListPanel> {
                 const SizedBox(height: 6),
               ],
               SizedBox(
-                width: 64,
-                child: OutlinedButton(
+                width: 68,
+                child: ElevatedButton(
                   onPressed: () => _onRemove(item),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFFFF4D6D),
-                    side:
-                        const BorderSide(color: Color(0xFFFF4D6D), width: 0.8),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFF4D6D),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 4, vertical: 6),
                     minimumSize: const Size(0, 0),
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     textStyle: const TextStyle(fontSize: 10),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                        borderRadius: BorderRadius.circular(6)),
                   ),
-                  child: const Text('移出直播间', maxLines: 1),
+                  child: const Text('移除', maxLines: 1),
                 ),
               ),
             ],

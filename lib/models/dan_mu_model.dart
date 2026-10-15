@@ -13,6 +13,7 @@ class DanMuModel {
 	LiveRoomDanMuModel? zhiboRoomVo;
 	String? newUserName;
 	String? content;
+	int? bizType;//1=首次进入看谁 2=看看谁 3预约谁
 
 	DanMuModel();
 

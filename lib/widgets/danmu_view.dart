@@ -109,9 +109,9 @@ class _DanmuViewState extends State<DanmuView> {
       return _systemLine('${danmu.newUserName ?? '游客'} 进入直播间');
     }
 
-    // type4: 内容消息(红色字体,字号比其他类型大 3 号)
+    // type4: 内容消息(bizType 1/2 橙色, 3 红色,字号比其他类型大 3 号)
     if (danmu.messageType == DanMuMessageType.vipEnter) {
-      return _contentLine(danmu.content ?? '');
+      return _contentLine(danmu.content ?? '', danmu.bizType);
     }
 
     // type2: 互动消息(评论 / 送礼 / 点赞)
@@ -129,16 +129,19 @@ class _DanmuViewState extends State<DanmuView> {
     return _richLine(name, ' 点了个赞', const Color(0xFFFF8A80));
   }
 
-  /// 内容消息行(type4:红色字体,字号比其他类型大 3 号 -> 14 + 3 = 17)
-  Widget _contentLine(String text) {
+  /// 内容消息行(type4:bizType 1/2 橙色、3 红色,字号比其他类型大 3 号 -> 14 + 3 = 17)
+  Widget _contentLine(String text, int? bizType) {
+    // bizType==3(预约谁) 红色;1/2(首次进入看谁/看看谁) 橙色,缺失时默认橙色
+    final Color color =
+        bizType == 3 ? Colors.red : const Color(0xFFFF9800);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Text(
         text,
-        style: const TextStyle(
-          color: Colors.red,
+        style: TextStyle(
+          color: color,
           fontSize: 17,
-          shadows: [Shadow(color: Colors.black54, blurRadius: 3)],
+          shadows: const [Shadow(color: Colors.black54, blurRadius: 3)],
         ),
       ),
     );

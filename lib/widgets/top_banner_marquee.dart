@@ -23,7 +23,7 @@ class _TopBannerMarqueeState extends State<TopBannerMarquee>
   /// 红色字体样式
   static const TextStyle _style = TextStyle(
     color: Colors.red,
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: FontWeight.bold,
     shadows: [Shadow(color: Colors.black54, blurRadius: 3)],
   );

@@ -156,8 +156,10 @@ class DanmuController extends GetxController {
           }
           break;
         case DanMuMessageType.vipEnter:
-          // type4:①直播间顶部滚动弹幕(红色),多条时排队等待
-          _enqueueTopBanner(danmu.content ?? '');
+          // type4:①仅 bizType==3(预约谁) 才上直播间顶部滚动弹幕,多条时排队等待
+          if (danmu.bizType == 3) {
+            _enqueueTopBanner(danmu.content ?? '');
+          }
           // ②同时加入底部弹幕列表展示
           messages.add(danmu);
           if (messages.length > _maxMessages) {

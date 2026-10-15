@@ -24,4 +24,10 @@ extension AddAnchorModelExt on AddAnchorModel {
     final urls = picUrls;
     return urls.isEmpty ? '' : urls.first;
   }
+
+  /// 等级徽标文案(如有更多等级映射在此补充,与 AnchorModelExt 保持一致)
+  String get levelText => _levelNames[level] ?? level ?? '';
+  static const Map<String, String> _levelNames = {
+    'five_level': '永恒钻石',
+  };
 }

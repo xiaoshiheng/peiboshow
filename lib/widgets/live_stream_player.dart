@@ -164,7 +164,7 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
       if (ok) {
         SmartDialog.showToast('成为房管成功');
         // 同步更新本地房间状态,成为房管按钮立即隐藏
-        setState(() => widget.room.isAdmin = 1);
+        setState(() => widget.room.isAdmin = true);
       }
     } finally {
       if (mounted) _becomingAdmin = false;
@@ -250,8 +250,8 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
             child: TopBannerMarquee(tag: _danmuTag),
           ),
 
-        // 右上角成为房管按钮:isAdmin==1(已是当前直播间管理员)时隐藏
-        if ((widget.room.isAdmin ?? 0) != 1)
+        // 右上角成为房管按钮:isAdmin==true(已是当前直播间管理员)时隐藏
+        if (widget.room.isAdmin != true)
           Positioned(
             right: 16,
             top: 44,

@@ -172,7 +172,7 @@ LiveRoomModel $LiveRoomModelFromJson(Map<String, dynamic> json) {
   if (zhiboNumEnd != null) {
     liveRoomModel.zhiboNumEnd = zhiboNumEnd;
   }
-  final int? isAdmin = jsonConvert.convert<int>(json['isAdmin']);
+  final bool? isAdmin = jsonConvert.convert<bool>(json['isAdmin']);
   if (isAdmin != null) {
     liveRoomModel.isAdmin = isAdmin;
   }
@@ -269,7 +269,7 @@ extension LiveRoomModelExtension on LiveRoomModel {
     int? isFull,
     int? zhiboNumStart,
     int? zhiboNumEnd,
-    int? isAdmin,
+    bool? isAdmin,
   }) {
     return LiveRoomModel()
       ..id = id ?? this.id
