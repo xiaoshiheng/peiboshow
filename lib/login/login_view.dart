@@ -33,7 +33,7 @@ class LoginView extends GetView<LoginController> {
                 const SizedBox(height: 16),
                 const Center(
                   child: Text(
-                    '欢迎来到 PeiboShow',
+                    '欢迎来到 巢派管理',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 20,

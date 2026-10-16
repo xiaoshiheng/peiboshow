@@ -2,7 +2,9 @@ import 'package:get/get.dart';
 
 import 'package:get/get.dart';
 import 'package:meta/meta.dart';
+import 'package:peiboshow/api_request/api_request.dart';
 
+import '../api_request/api_request_client.dart';
 import '../models/user_model.dart';
 import '../utils/nsuserdefault.dart';
 
@@ -40,6 +42,13 @@ class GlobalController extends GetxController {
 
   ///退出登录，清除本地token和用户信息
   Future<void> logout() async {
+    bool ok = await request(() async {
+      await requestClient.get("/wx-zhibo-room/delAdmin");
+      return true;
+    });
+    if (!ok) {
+      return;
+    }
     NSUserDefault userDefault = await NSUserDefault.getInstance();
     await userDefault.removeValueForKey("token");
     await userDefault.removeValueForKey("userModel");
