@@ -68,7 +68,7 @@ class _LiveRoomListViewState extends State<LiveRoomListView> {
                   Icon(Icons.list, color: Colors.white, size: 20),
                   SizedBox(width: 8),
                   Text(
-                    '更多直播间',
+                    '更多才艺间',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 16,
@@ -98,7 +98,7 @@ class _LiveRoomListViewState extends State<LiveRoomListView> {
                     footer: const ClassicFooter(
                       textStyle: TextStyle(color: Colors.white70),
                       loadingText: '加载中...',
-                      noDataText: '没有更多直播间了',
+                      noDataText: '没有更多才艺间了',
                     ),
                     onRefresh: _onRefresh,
                     onLoading: _onLoading,
@@ -108,7 +108,7 @@ class _LiveRoomListViewState extends State<LiveRoomListView> {
                               SizedBox(height: 80),
                               Center(
                                 child: Text(
-                                  '暂无直播间',
+                                  '暂无才艺间',
                                   style: TextStyle(color: Colors.white54),
                                 ),
                               ),
@@ -133,7 +133,7 @@ class _LiveRoomListViewState extends State<LiveRoomListView> {
                                             NetworkImage(room.picUrl!),
                                       ),
                                 title: Text(
-                                  room.roomName ?? '未命名直播间',
+                                  room.roomName ?? '未命名才艺间',
                                   style: const TextStyle(color: Colors.white),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,

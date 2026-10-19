@@ -101,7 +101,7 @@ class _AnchorListPanelState extends State<AnchorListPanel> {
         backgroundColor: const Color(0xFF2A2A2C),
         title: const Text('提示',
             style: TextStyle(color: Colors.white, fontSize: 16)),
-        content: Text('确定将 $name 移出直播间吗?',
+        content: Text('确定将 $name 移出才艺间吗?',
             style: const TextStyle(color: Colors.white70, fontSize: 14)),
         actions: [
           TextButton(
@@ -119,10 +119,10 @@ class _AnchorListPanelState extends State<AnchorListPanel> {
 
     final ok = await _controller.removeAnchor(item);
     if (ok) {
-      SmartDialog.showToast('已移出直播间');
+      SmartDialog.showToast('已移出才艺间');
       _controller.getAnchorList();
     } else {
-      SmartDialog.showToast('移出直播间失败');
+      SmartDialog.showToast('移出才艺间失败');
     }
   }
 

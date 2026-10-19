@@ -106,7 +106,7 @@ class _DanmuViewState extends State<DanmuView> {
   Widget _buildItem(DanMuModel danmu) {
     // type3: 游客进入直播间
     if (danmu.messageType == DanMuMessageType.enter) {
-      return _systemLine('${danmu.newUserName ?? '游客'} 进入直播间');
+      return _systemLine('${danmu.newUserName ?? '游客'} 进入才艺间');
     }
 
     // type4: 内容消息(bizType 1/2 橙色, 3 红色,字号比其他类型大 3 号)
