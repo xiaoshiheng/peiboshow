@@ -15,6 +15,7 @@ class AddAnchorModel {
 	int? userNo;
 	String? statusCN;
 	String? processCN;
+	String? levelCN;
 
 	AddAnchorModel();
 

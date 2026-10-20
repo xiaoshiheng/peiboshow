@@ -26,11 +26,8 @@ extension AnchorModelExt on AnchorModel {
     return urls.isEmpty ? '' : urls.first;
   }
 
-  /// 等级徽标文案(如有更多等级映射在此补充)
-  String get levelText => _levelNames[level] ?? level ?? '';
-  static const Map<String, String> _levelNames = {
-    'five_level': '永恒钻石',
-  };
+  /// 等级徽标文案:直接使用后端返回的 levelCN
+  String get levelText => levelCN ?? '';
 
   /// 昵称下方副标题(年龄/身高)
   String get subText {

@@ -14,6 +14,7 @@ class AnchorModel {
 	String? zhiboRoomId;
 	int? age;
 	int? height;
+	String? levelCN;
 	
 
 	AnchorModel();

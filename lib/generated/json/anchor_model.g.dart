@@ -39,6 +39,10 @@ AnchorModel $AnchorModelFromJson(Map<String, dynamic> json) {
   if (height != null) {
     anchorModel.height = height;
   }
+  final String? levelCN = jsonConvert.convert<String>(json['levelCN']);
+  if (levelCN != null) {
+    anchorModel.levelCN = levelCN;
+  }
   return anchorModel;
 }
 
@@ -53,6 +57,7 @@ Map<String, dynamic> $AnchorModelToJson(AnchorModel entity) {
   data['zhiboRoomId'] = entity.zhiboRoomId;
   data['age'] = entity.age;
   data['height'] = entity.height;
+  data['levelCN'] = entity.levelCN;
   return data;
 }
 
@@ -67,6 +72,7 @@ extension AnchorModelExtension on AnchorModel {
     String? zhiboRoomId,
     int? age,
     int? height,
+    String? levelCN,
   }) {
     return AnchorModel()
       ..id = id ?? this.id
@@ -77,6 +83,7 @@ extension AnchorModelExtension on AnchorModel {
       ..picUrl = picUrl ?? this.picUrl
       ..zhiboRoomId = zhiboRoomId ?? this.zhiboRoomId
       ..age = age ?? this.age
-      ..height = height ?? this.height;
+      ..height = height ?? this.height
+      ..levelCN = levelCN ?? this.levelCN;
   }
 }
