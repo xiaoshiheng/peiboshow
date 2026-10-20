@@ -8,6 +8,8 @@ import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 import '../models/add_anchor_model.dart';
 import '../models/add_anchor_model_ext.dart';
+import '../models/level_model.dart';
+import '../models/recommend_model.dart';
 import 'anchor_image_viewer.dart';
 import 'controller/add_anchor_controller.dart';
 
@@ -81,6 +83,18 @@ class _AddAnchorPanelState extends State<AddAnchorPanel> {
   /// 搜索关键词(本地过滤,不请求接口)
   String _keyword = '';
 
+  /// 推荐人筛选(单选,null 表示不限)
+  int? _recommendId;
+
+  /// 段位筛选(多选,存 LevelModel.value,空表示不限)
+  final Set<String> _levelFilter = <String>{};
+
+  /// 段位下拉面板是否展开
+  bool _levelDropOpen = false;
+
+  /// 推荐人下拉面板是否展开
+  bool _recommendDropOpen = false;
+
   /// 已选主播 id 集合
   final Set<int> _selectedIds = <int>{};
 
@@ -92,6 +106,24 @@ class _AddAnchorPanelState extends State<AddAnchorPanel> {
     super.initState();
     // loading 为控制器 RxBool,由 Obx 监听,无需本地加载状态
     _controller.getAnchorList();
+    // 推荐人/段位为筛选数据源,加载完成后刷新筛选栏
+    _controller.getRecommend().then((_) => _refreshFilterBar());
+    _controller.getLevel().then((_) => _refreshFilterBar());
+  }
+
+  /// 筛选数据源加载完成后刷新筛选栏,并清理已失效的筛选项
+  void _refreshFilterBar() {
+    if (!mounted) return;
+    setState(() {
+      final Set<int?> recommendIds =
+          _controller.recommendList.map((e) => e.id).toSet();
+      if (_recommendId != null && !recommendIds.contains(_recommendId)) {
+        _recommendId = null;
+      }
+      final Set<String> levelValues =
+          _controller.levelList.map((e) => e.value ?? '').toSet();
+      _levelFilter.removeWhere((v) => !levelValues.contains(v));
+    });
   }
 
   @override
@@ -103,11 +135,20 @@ class _AddAnchorPanelState extends State<AddAnchorPanel> {
     super.dispose();
   }
 
-  /// 本地搜索:直接过滤 anchorList 中 name 包含搜索词的数据
+  /// 本地过滤:搜索词 + 推荐人(单选,bigGroupId == 推荐人 id)
+  /// + 段位(多选,level == 段位 value),均直接过滤 anchorList
   List<AddAnchorModel> get _filteredList {
-    final list = _controller.anchorList;
-    if (_keyword.isEmpty) return list;
-    return list.where((e) => (e.name ?? '').contains(_keyword)).toList();
+    List<AddAnchorModel> list = _controller.anchorList;
+    if (_keyword.isNotEmpty) {
+      list = list.where((e) => (e.name ?? '').contains(_keyword)).toList();
+    }
+    if (_recommendId != null) {
+      list = list.where((e) => e.bigGroupId == _recommendId).toList();
+    }
+    if (_levelFilter.isNotEmpty) {
+      list = list.where((e) => _levelFilter.contains(e.level)).toList();
+    }
+    return list;
   }
 
   void _onSearchChanged(String value) {
@@ -125,6 +166,47 @@ class _AddAnchorPanelState extends State<AddAnchorPanel> {
     } else {
       Navigator.of(context).pop();
     }
+  }
+
+  void _toggleLevel(String key) {
+    setState(() {
+      if (_levelFilter.contains(key)) {
+        _levelFilter.remove(key);
+      } else {
+        _levelFilter.add(key);
+      }
+    });
+  }
+
+  /// 展开/收起推荐人下拉面板(与段位面板互斥)
+  void _toggleRecommendDrop() {
+    setState(() {
+      _recommendDropOpen = !_recommendDropOpen;
+      _levelDropOpen = false;
+    });
+  }
+
+  /// 单选推荐人:选中即收起面板
+  void _selectRecommend(int? id) {
+    setState(() {
+      _recommendId = id;
+      _recommendDropOpen = false;
+    });
+  }
+
+  /// 推荐人按钮文案:选中时显示对应推荐人名
+  String get _recommendLabel {
+    if (_recommendId == null) return '推荐人: 全部';
+    final match =
+        _controller.recommendList.where((e) => e.id == _recommendId);
+    return '推荐人: ${match.isEmpty ? '全部' : (match.first.name ?? '全部')}';
+  }
+
+  void _resetFilters() {
+    setState(() {
+      _recommendId = null;
+      _levelFilter.clear();
+    });
   }
 
   void _toggleItem(AddAnchorModel item) {
@@ -210,8 +292,9 @@ class _AddAnchorPanelState extends State<AddAnchorPanel> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _buildSearchBar(),
+                    _buildFilterBar(),
                     const Divider(height: 1, color: Colors.white24),
-                    Expanded(child: _buildBody()),
+                    Expanded(child: _buildBodyArea()),
                     _buildBottomBar(),
                   ],
                 ),
@@ -270,6 +353,258 @@ class _AddAnchorPanelState extends State<AddAnchorPanel> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// 筛选栏:推荐人(单选下拉) + 段位(多选下拉) + 重置
+  Widget _buildFilterBar() {
+    final bool hasFilter = _recommendId != null || _levelFilter.isNotEmpty;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+      child: Row(
+        children: [
+          Flexible(child: _buildRecommendDropdown()),
+          const SizedBox(width: 10),
+          _buildLevelDropdownButton(),
+          const Spacer(),
+          if (hasFilter)
+            GestureDetector(
+              onTap: _resetFilters,
+              child:
+                  const Text('重置', style: TextStyle(fontSize: 13, color: _accent)),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// 推荐人单选下拉按钮:与段位按钮同结构同高度,点击展开全宽浮层
+  Widget _buildRecommendDropdown() {
+    final bool active = _recommendId != null;
+    return GestureDetector(
+      onTap: _toggleRecommendDrop,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+        decoration: BoxDecoration(
+          color: Colors.white10,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: active ? _accent : Colors.white24),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: Text(
+                _recommendLabel,
+                style: const TextStyle(fontSize: 13, color: Colors.white),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            Icon(
+              _recommendDropOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down,
+              color: Colors.white54,
+              size: 20,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 段位多选下拉按钮:点击展开/收起复选浮层
+  Widget _buildLevelDropdownButton() {
+    final bool active = _levelFilter.isNotEmpty;
+    return GestureDetector(
+      onTap: () => setState(() {
+        _levelDropOpen = !_levelDropOpen;
+        _recommendDropOpen = false;
+      }),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+        decoration: BoxDecoration(
+          color: Colors.white10,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: active ? _accent : Colors.white24),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              active ? '段位: 已选${_levelFilter.length}项' : '段位: 全部',
+              style: const TextStyle(fontSize: 13, color: Colors.white),
+            ),
+            Icon(
+              _levelDropOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down,
+              color: Colors.white54,
+              size: 20,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 列表区外层 Stack:推荐人/段位下拉浮层覆盖在列表上方
+  Widget _buildBodyArea() {
+    return Stack(
+      children: [
+        _buildBody(),
+        if (_levelDropOpen || _recommendDropOpen) ...[
+          // 浮层遮罩:点击收起下拉面板
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => setState(() {
+                _levelDropOpen = false;
+                _recommendDropOpen = false;
+              }),
+              child: const SizedBox.expand(),
+            ),
+          ),
+          if (_recommendDropOpen)
+            Positioned(
+              left: 12,
+              right: 12,
+              top: 0,
+              child: _buildRecommendDropdownPanel(),
+            ),
+          if (_levelDropOpen)
+            Positioned(
+              left: 12,
+              right: 12,
+              top: 0,
+              child: _buildLevelDropdownPanel(),
+            ),
+        ],
+      ],
+    );
+  }
+
+  /// 推荐人单选下拉面板:与段位面板同宽(占满列表宽度),单选即收起
+  Widget _buildRecommendDropdownPanel() {
+    final List<RecommendModel> recommends = _controller.recommendList;
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        constraints: const BoxConstraints(maxHeight: 240),
+        decoration: BoxDecoration(
+          color: const Color(0xFF2A2A2C),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.white24),
+          boxShadow: const [
+            BoxShadow(
+                color: Colors.black45, blurRadius: 8, offset: Offset(0, 2)),
+          ],
+        ),
+        child: recommends.isEmpty
+            ? const Padding(
+                padding: EdgeInsets.all(16),
+                child: Center(
+                  child: Text('暂无推荐人',
+                      style: TextStyle(color: Colors.white54, fontSize: 13)),
+                ),
+              )
+            : ListView(
+                shrinkWrap: true,
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                children: [
+                  _buildRecommendRow(null, '全部'),
+                  ...recommends.map((e) => _buildRecommendRow(e.id, e.name ?? '')),
+                ],
+              ),
+      ),
+    );
+  }
+
+  /// 推荐人面板行:单选,选中项右侧显示对勾
+  Widget _buildRecommendRow(int? id, String name) {
+    final bool checked = _recommendId == id;
+    return InkWell(
+      onTap: () => _selectRecommend(id),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                name,
+                style: const TextStyle(fontSize: 13, color: Colors.white),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (checked) const Icon(Icons.check, color: _accent, size: 18),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 段位多选下拉面板:复选列表,数据源 levelList
+  Widget _buildLevelDropdownPanel() {
+    final List<LevelModel> levels = _controller.levelList;
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        constraints: const BoxConstraints(maxHeight: 240),
+        decoration: BoxDecoration(
+          color: const Color(0xFF2A2A2C),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.white24),
+          boxShadow: const [
+            BoxShadow(
+                color: Colors.black45, blurRadius: 8, offset: Offset(0, 2)),
+          ],
+        ),
+        child: levels.isEmpty
+            ? const Padding(
+                padding: EdgeInsets.all(16),
+                child: Center(
+                  child: Text('暂无段位',
+                      style: TextStyle(color: Colors.white54, fontSize: 13)),
+                ),
+              )
+            : ListView(
+                shrinkWrap: true,
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                children: levels.map((lv) {
+                  final String key = lv.value ?? '';
+                  final bool checked = _levelFilter.contains(key);
+                  return InkWell(
+                    onTap: () => _toggleLevel(key),
+                    child: Padding(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      child: Row(
+                        children: [
+                          Checkbox(
+                            value: checked,
+                            onChanged: (_) => _toggleLevel(key),
+                            activeColor: _accent,
+                            checkColor: Colors.white,
+                            side: const BorderSide(color: Colors.white38),
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                            visualDensity: VisualDensity.compact,
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              lv.name ?? key,
+                              style: const TextStyle(
+                                  fontSize: 13, color: Colors.white),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
       ),
     );
   }
