@@ -47,6 +47,10 @@ AddAnchorModel $AddAnchorModelFromJson(Map<String, dynamic> json) {
   if (levelCN != null) {
     addAnchorModel.levelCN = levelCN;
   }
+  final int? bigGroupId = jsonConvert.convert<int>(json['bigGroupId']);
+  if (bigGroupId != null) {
+    addAnchorModel.bigGroupId = bigGroupId;
+  }
   return addAnchorModel;
 }
 
@@ -63,6 +67,7 @@ Map<String, dynamic> $AddAnchorModelToJson(AddAnchorModel entity) {
   data['statusCN'] = entity.statusCN;
   data['processCN'] = entity.processCN;
   data['levelCN'] = entity.levelCN;
+  data['bigGroupId'] = entity.bigGroupId;
   return data;
 }
 
@@ -79,6 +84,7 @@ extension AddAnchorModelExtension on AddAnchorModel {
     String? statusCN,
     String? processCN,
     String? levelCN,
+    int? bigGroupId,
   }) {
     return AddAnchorModel()
       ..id = id ?? this.id
@@ -91,6 +97,7 @@ extension AddAnchorModelExtension on AddAnchorModel {
       ..userNo = userNo ?? this.userNo
       ..statusCN = statusCN ?? this.statusCN
       ..processCN = processCN ?? this.processCN
-      ..levelCN = levelCN ?? this.levelCN;
+      ..levelCN = levelCN ?? this.levelCN
+      ..bigGroupId = bigGroupId ?? this.bigGroupId;
   }
 }

@@ -61,16 +61,24 @@ class _AnchorImageViewerState extends State<AnchorImageViewer> {
                 controller: _pageController,
                 itemCount: widget.urls.length,
                 onPageChanged: (i) => setState(() => _currentIndex = i),
-                itemBuilder: (context, index) => Center(
+                itemBuilder: (context, index) => SizedBox.expand(
                   child: CachedNetworkImage(
                     imageUrl: widget.urls[index],
                     fit: BoxFit.contain,
-                    progressIndicatorBuilder: (_, __, ___) =>
-                    const CircularProgressIndicator(color: Colors.white),
-                    errorWidget: (_, __, ___) => const Icon(
+                    progressIndicatorBuilder: (_, __, ___) => const Center(
+                      child: SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: CircularProgressIndicator(color: Colors.white),
+                      ),
+                    ),
+                    errorWidget: (_, __, ___) => const Center(
+                      child: Icon(
                         Icons.broken_image_outlined,
                         color: Colors.white54,
-                        size: 48),
+                        size: 48,
+                      ),
+                    ),
                   ),
                 ),
               ),

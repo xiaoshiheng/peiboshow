@@ -8,6 +8,7 @@ import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 import '../models/add_anchor_model.dart';
 import '../models/add_anchor_model_ext.dart';
+import 'anchor_image_viewer.dart';
 import 'controller/add_anchor_controller.dart';
 
 /// 添加主播路由:从右侧划入
@@ -135,6 +136,13 @@ class _AddAnchorPanelState extends State<AddAnchorPanel> {
         _selectedIds.add(id);
       }
     });
+  }
+
+  /// 点击头像看大图(多张可滑动),逻辑与查看主播列表一致
+  void _openViewer(AddAnchorModel item) {
+    final urls = item.picUrls;
+    if (urls.isEmpty) return;
+    AnchorImageViewer.show(context, urls);
   }
 
   /// 当前搜索结果是否已全部选中
@@ -342,16 +350,19 @@ class _AddAnchorPanelState extends State<AddAnchorPanel> {
               visualDensity: VisualDensity.compact,
             ),
             const SizedBox(width: 4),
-            // 头像:与 AnchorListPanel 一致,取 picUrl 第一条 fileUrl,不点击看大图
-            CircleAvatar(
-              radius: 24,
-              backgroundColor: Colors.white24,
-              backgroundImage: item.avatarUrl.isEmpty
-                  ? null
-                  : CachedNetworkImageProvider(item.avatarUrl),
-              child: item.avatarUrl.isEmpty
-                  ? const Icon(Icons.person, color: Colors.white54, size: 24)
-                  : null,
+            // 头像:与 AnchorListPanel 一致,取 picUrl 第一条 fileUrl,点击看大图(多张可滑动)
+            GestureDetector(
+              onTap: () => _openViewer(item),
+              child: CircleAvatar(
+                radius: 24,
+                backgroundColor: Colors.white24,
+                backgroundImage: item.avatarUrl.isEmpty
+                    ? null
+                    : CachedNetworkImageProvider(item.avatarUrl),
+                child: item.avatarUrl.isEmpty
+                    ? const Icon(Icons.person, color: Colors.white54, size: 24)
+                    : null,
+              ),
             ),
             const SizedBox(width: 10),
             Expanded(

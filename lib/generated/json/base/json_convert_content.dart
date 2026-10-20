@@ -9,8 +9,10 @@ import 'package:peiboshow/models/anchor_list_model.dart';
 import 'package:peiboshow/models/anchor_model.dart';
 import 'package:peiboshow/models/dan_mu_model.dart';
 import 'package:peiboshow/models/hu_dong_dan_mu_model.dart';
+import 'package:peiboshow/models/level_model.dart';
 import 'package:peiboshow/models/live_room_dan_mu_model.dart';
 import 'package:peiboshow/models/live_room_model.dart';
+import 'package:peiboshow/models/recommend_model.dart';
 import 'package:peiboshow/models/user_model.dart';
 
 JsonConvert jsonConvert = JsonConvert();
@@ -170,6 +172,10 @@ class JsonConvert {
       return data.map<HuDongDanMuModel>((Map<String, dynamic> e) =>
           HuDongDanMuModel.fromJson(e)).toList() as M;
     }
+    if (<LevelModel>[] is M) {
+      return data.map<LevelModel>((Map<String, dynamic> e) =>
+          LevelModel.fromJson(e)).toList() as M;
+    }
     if (<LiveRoomDanMuModel>[] is M) {
       return data.map<LiveRoomDanMuModel>((Map<String, dynamic> e) =>
           LiveRoomDanMuModel.fromJson(e)).toList() as M;
@@ -177,6 +183,10 @@ class JsonConvert {
     if (<LiveRoomModel>[] is M) {
       return data.map<LiveRoomModel>((Map<String, dynamic> e) =>
           LiveRoomModel.fromJson(e)).toList() as M;
+    }
+    if (<RecommendModel>[] is M) {
+      return data.map<RecommendModel>((Map<String, dynamic> e) =>
+          RecommendModel.fromJson(e)).toList() as M;
     }
     if (<UserModel>[] is M) {
       return data.map<UserModel>((Map<String, dynamic> e) =>
@@ -208,8 +218,10 @@ class JsonConvertClassCollection {
     (AnchorModel).toString(): AnchorModel.fromJson,
     (DanMuModel).toString(): DanMuModel.fromJson,
     (HuDongDanMuModel).toString(): HuDongDanMuModel.fromJson,
+    (LevelModel).toString(): LevelModel.fromJson,
     (LiveRoomDanMuModel).toString(): LiveRoomDanMuModel.fromJson,
     (LiveRoomModel).toString(): LiveRoomModel.fromJson,
+    (RecommendModel).toString(): RecommendModel.fromJson,
     (UserModel).toString(): UserModel.fromJson,
   };
 

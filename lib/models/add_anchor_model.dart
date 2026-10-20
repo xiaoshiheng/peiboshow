@@ -16,6 +16,7 @@ class AddAnchorModel {
 	String? statusCN;
 	String? processCN;
 	String? levelCN;
+	int? bigGroupId;
 
 	AddAnchorModel();
 
