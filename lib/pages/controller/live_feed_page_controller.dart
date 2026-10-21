@@ -88,4 +88,12 @@ class LiveFeedPageController extends GetxController {
       return true;
     });
   }
+
+  ///下播
+  Future<bool> offShelf(String roomId) async {
+    return await request(() async {
+      await requestClient.delete("/wx-zhibo-room/delete/${roomId}?cleanItem=true");
+      return true;
+    });
+  }
 }

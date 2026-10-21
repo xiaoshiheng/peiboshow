@@ -171,6 +171,52 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
     }
   }
 
+  /// 是否正在下播,防止重复点击
+  bool _offShelfing = false;
+
+  /// 下播点击事件:二次确认后调用 offShelf 接口,成功后刷新 live_feed_page
+  Future<void> _onOffShelf() async {
+    final int? roomId = widget.room.id;
+    if (roomId == null || _offShelfing) return;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xFF2A2A2C),
+        title: const Text('提示',
+            style: TextStyle(color: Colors.white, fontSize: 16)),
+        content: Text('确定下播 ${widget.room.roomName ?? ''} 吗?',
+            style: const TextStyle(color: Colors.white70, fontSize: 14)),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('取消',
+                  style: TextStyle(color: Colors.white54))),
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('确定',
+                  style: TextStyle(color: Color(0xFFFF4D6D)))),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+
+    _offShelfing = true;
+    try {
+      final LiveFeedPageController controller =
+          Get.find<LiveFeedPageController>();
+      final bool ok = await controller.offShelf(roomId.toString());
+      if (!mounted) return;
+      if (ok) {
+        SmartDialog.showToast('下播成功');
+        // 刷新直播列表,下播的房间从列表移除
+        await controller.refresh();
+      }
+    } finally {
+      if (mounted) _offShelfing = false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -291,6 +337,22 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                ElevatedButton.icon(
+                  onPressed: _onOffShelf,
+                  icon: const Icon(Icons.power_settings_new, size: 16),
+                  label:
+                      const Text('下播', style: TextStyle(fontSize: 12)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black.withOpacity(0.5),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 8),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18)),
+                  ),
+                ),
+                const SizedBox(width: 8),
                 ElevatedButton.icon(
                   onPressed: () => Navigator.of(context)
                       .push(AddAnchorRoute(roomId: widget.room.id!)),
