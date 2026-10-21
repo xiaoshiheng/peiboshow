@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -11,6 +11,7 @@ import '../../../api_request/api_configs.dart';
 import '../../../models/dan_mu_model.dart';
 import '../../../models/live_room_dan_mu_model.dart';
 import '../../../utils/nsuserdefault.dart';
+import 'live_feed_page_controller.dart';
 
 /// 服务端弹幕消息类型
 class DanMuMessageType {
@@ -58,6 +59,9 @@ class DanmuController extends GetxController {
 
   bool _manualClose = false;
   int _reconnectAttempts = 0;
+
+  /// 是否已弹出"直播间已下播"提示,避免重复弹框
+  bool _offShelfDialogShown = false;
 
   @override
   void onInit() {
@@ -145,6 +149,10 @@ class DanmuController extends GetxController {
           // type1: 更新直播间实时状态
           if (danmu.zhiboRoomVo != null) {
             roomInfo.value = danmu.zhiboRoomVo;
+            // status != 1 表示直播间已下播:弹全屏遮罩框,阻止滑动切换,确定后刷新列表
+            if (danmu.zhiboRoomVo?.status != 1) {
+              _showOffShelfDialog();
+            }
           }
           break;
         case DanMuMessageType.hudong:
@@ -235,6 +243,41 @@ class DanmuController extends GetxController {
     if (topBanner.value != null) return; // 正在滚动,排队等待
     if (_bannerQueue.isEmpty) return;
     topBanner.value = _bannerQueue.removeAt(0);
+  }
+
+  /// 弹出全屏遮罩提示:该直播间已下播
+  /// 遮罩铺满全屏且不可点击外部关闭,阻止用户滑动切换直播间;
+  /// 点击"确定"后关闭弹框并调用 LiveFeedPageController.refresh() 刷新列表
+  void _showOffShelfDialog() {
+    if (_offShelfDialogShown) return;
+    _offShelfDialogShown = true;
+
+    Get.dialog(
+      WillPopScope(
+        onWillPop: () async => false,
+        child: AlertDialog(
+          backgroundColor: const Color(0xFF2A2A2C),
+          title: const Text('提示',
+              style: TextStyle(color: Colors.white, fontSize: 16)),
+          content: const Text('该直播间已下播',
+              style: TextStyle(color: Colors.white70, fontSize: 14)),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                Get.back();
+                _offShelfDialogShown = false;
+                if (Get.isRegistered<LiveFeedPageController>()) {
+                  await Get.find<LiveFeedPageController>().refresh();
+                }
+              },
+              child: const Text('确定',
+                  style: TextStyle(color: Color(0xFFFF4D6D))),
+            ),
+          ],
+        ),
+      ),
+      barrierDismissible: false,
+    );
   }
 
   /// 指数退避重连,最多 5 次
