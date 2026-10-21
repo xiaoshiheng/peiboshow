@@ -139,7 +139,7 @@ class _LiveRoomListViewState extends State<LiveRoomListView> {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 subtitle: Text(
-                                  '${room.companyName ?? ''}  ${room.onlineMemberCount ?? 0} 人在线',
+                                  '${room.companyName ?? ''}  ${room.onlineItemCount ?? 0} 人在线',
                                   style: const TextStyle(
                                       color: Colors.white54, fontSize: 12),
                                   maxLines: 1,

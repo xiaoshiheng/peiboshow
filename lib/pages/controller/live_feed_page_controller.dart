@@ -57,6 +57,7 @@ class LiveFeedPageController extends GetxController {
             "size": _pageSize,
             "companyId": globalController.userModel?.companyId ?? "",
             "isIng": 1,
+            "status": 1
           },
         );
 

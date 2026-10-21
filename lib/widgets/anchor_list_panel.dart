@@ -94,7 +94,7 @@ class _AnchorListPanelState extends State<AnchorListPanel> {
 
   /// 移出直播间
   Future<void> _onRemove(AnchorListModel item) async {
-    final name = item.sitem?.title ?? '该主播';
+    final name = item.sitem?.name ?? '该主播';
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
@@ -341,6 +341,16 @@ class _AnchorListPanelState extends State<AnchorListPanel> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       child: Row(
         children: [
+          // 编号:取 zhiboNo,显示在头像左侧
+          Text(
+            item.zhiboNo?.toString() ?? '',
+            style: const TextStyle(
+              color: Color(0xFFFFB74D),
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(width: 8),
           // 头像:picUrl 第一条 fileUrl,点击看大图(多张可滑动)
           GestureDetector(
             onTap: anchor == null ? null : () => _openViewer(anchor),
@@ -365,7 +375,7 @@ class _AnchorListPanelState extends State<AnchorListPanel> {
                 Row(
                   children: [
                     Flexible(
-                      child: Text(anchor?.title ?? '未命名',
+                      child: Text(anchor?.name ?? '未命名',
                           style: const TextStyle(
                               color: Colors.white,
                               fontSize: 14,

@@ -37,7 +37,7 @@ class LiveRoomModel {
 	int? tipTimes;
 	int? tipAmount;
 	int? onlineMemberCount;
-	int? onlineltemCount;
+	int? onlineItemCount;
 	int? orderCount;
 	String? companyName;
 	String? channelTypeCN;

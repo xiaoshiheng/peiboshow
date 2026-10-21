@@ -126,10 +126,10 @@ LiveRoomModel $LiveRoomModelFromJson(Map<String, dynamic> json) {
   if (onlineMemberCount != null) {
     liveRoomModel.onlineMemberCount = onlineMemberCount;
   }
-  final int? onlineltemCount = jsonConvert.convert<int>(
-      json['onlineltemCount']);
-  if (onlineltemCount != null) {
-    liveRoomModel.onlineltemCount = onlineltemCount;
+  final int? onlineItemCount = jsonConvert.convert<int>(
+      json['onlineItemCount']);
+  if (onlineItemCount != null) {
+    liveRoomModel.onlineItemCount = onlineItemCount;
   }
   final int? orderCount = jsonConvert.convert<int>(json['orderCount']);
   if (orderCount != null) {
@@ -211,7 +211,7 @@ Map<String, dynamic> $LiveRoomModelToJson(LiveRoomModel entity) {
   data['tipTimes'] = entity.tipTimes;
   data['tipAmount'] = entity.tipAmount;
   data['onlineMemberCount'] = entity.onlineMemberCount;
-  data['onlineltemCount'] = entity.onlineltemCount;
+  data['onlineItemCount'] = entity.onlineItemCount;
   data['orderCount'] = entity.orderCount;
   data['companyName'] = entity.companyName;
   data['channelTypeCN'] = entity.channelTypeCN;
@@ -258,7 +258,7 @@ extension LiveRoomModelExtension on LiveRoomModel {
     int? tipTimes,
     int? tipAmount,
     int? onlineMemberCount,
-    int? onlineltemCount,
+    int? onlineItemCount,
     int? orderCount,
     String? companyName,
     String? channelTypeCN,
@@ -302,7 +302,7 @@ extension LiveRoomModelExtension on LiveRoomModel {
       ..tipTimes = tipTimes ?? this.tipTimes
       ..tipAmount = tipAmount ?? this.tipAmount
       ..onlineMemberCount = onlineMemberCount ?? this.onlineMemberCount
-      ..onlineltemCount = onlineltemCount ?? this.onlineltemCount
+      ..onlineItemCount = onlineItemCount ?? this.onlineItemCount
       ..orderCount = orderCount ?? this.orderCount
       ..companyName = companyName ?? this.companyName
       ..channelTypeCN = channelTypeCN ?? this.channelTypeCN
