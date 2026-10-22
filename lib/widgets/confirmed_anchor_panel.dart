@@ -281,28 +281,33 @@ class _ConfirmedAnchorPanelState extends State<ConfirmedAnchorPanel> {
     );
   }
 
-  /// 四列表格:预约时间/预约人/集合地/会员名称
+  /// 五列表格:序号/预约时间/预约人/集合地/主播名称
   Widget _buildTable(List<ConfirmedAnchorModel> list) {
     return Table(
       border: TableBorder.all(color: _border, width: 0.8),
       defaultColumnWidth: const FlexColumnWidth(1),
+      columnWidths: const {
+        0: FlexColumnWidth(0.4),
+      },
       children: [
         const TableRow(
           decoration: BoxDecoration(color: _headerBg),
           children: [
+            _HeaderCell('序号'),
             _HeaderCell('预约时间'),
             _HeaderCell('预约人'),
             _HeaderCell('集合地'),
-            _HeaderCell('会员名称'),
+            _HeaderCell('主播名称'),
           ],
         ),
-        ...list.map(
-              (e) => TableRow(
+        ...list.asMap().entries.map(
+              (entry) => TableRow(
             children: [
-              _Cell(e.preOrderTimeHM),
-              _Cell(e.managerName ?? ''),
-              _Cell(e.roomName0 ?? ''),
-              _Cell(e.itemName ?? ''),
+              _Cell('${list.length - entry.key}'),
+              _Cell(entry.value.preOrderTimeHM),
+              _Cell(entry.value.managerName ?? ''),
+              _Cell(entry.value.roomName0 ?? ''),
+              _Cell(entry.value.itemName ?? ''),
             ],
           ),
         ),

@@ -330,11 +330,13 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
             child: DanmuView(tag: _danmuTag),
           ),
 
-        // 左下角下播按钮
-        if (widget.room.status == 1 && widget.room.id != null)
+        // 右上角下播按钮:仅当已成为当前直播间管理员(isAdmin==true)时显示
+        if (widget.room.status == 1 &&
+            widget.room.id != null &&
+            widget.room.isAdmin == true)
           Positioned(
-            left: 16,
-            bottom: 24,
+            right: 16,
+            top: 44,
             child: ElevatedButton.icon(
               onPressed: _onOffShelf,
               icon: const Icon(Icons.power_settings_new, size: 16),

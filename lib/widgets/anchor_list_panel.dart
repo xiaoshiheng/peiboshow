@@ -414,9 +414,9 @@ class _AnchorListPanelState extends State<AnchorListPanel> {
           ),
           const SizedBox(width: 8),
           // 右侧按钮区:managerId>0(一见倾心) 时额外显示绿色"确认前往"按钮
-          Column(
+          Row(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               if (hasManager) ...[
                 SizedBox(
@@ -438,7 +438,7 @@ class _AnchorListPanelState extends State<AnchorListPanel> {
                     child: const Text('确认前往', maxLines: 1),
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(width: 6),
               ],
               SizedBox(
                 width: 68,
