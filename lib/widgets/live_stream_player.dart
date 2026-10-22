@@ -324,9 +324,31 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
           Positioned(
             left: 16,
             right: 16,
-            bottom: 24,
-            height: 300,
+            bottom: 68,
+            height: 260,
             child: DanmuView(tag: _danmuTag),
+          ),
+
+        // 左下角下播按钮
+        if (widget.room.status == 1 && widget.room.id != null)
+          Positioned(
+            left: 16,
+            bottom: 24,
+            child: ElevatedButton.icon(
+              onPressed: _onOffShelf,
+              icon: const Icon(Icons.power_settings_new, size: 16),
+              label:
+                  const Text('下播', style: TextStyle(fontSize: 12)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.black.withOpacity(0.5),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 12, vertical: 8),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18)),
+              ),
+            ),
           ),
 
         // 右下角按钮组:添加主播在左,查看主播在右,点击右侧划入对应半屏面板
@@ -337,22 +359,6 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                ElevatedButton.icon(
-                  onPressed: _onOffShelf,
-                  icon: const Icon(Icons.power_settings_new, size: 16),
-                  label:
-                      const Text('下播', style: TextStyle(fontSize: 12)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black.withOpacity(0.5),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 8),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18)),
-                  ),
-                ),
-                const SizedBox(width: 8),
                 ElevatedButton.icon(
                   onPressed: () => Navigator.of(context)
                       .push(AddAnchorRoute(roomId: widget.room.id!)),
