@@ -41,6 +41,15 @@ extension AnchorModelExt on AnchorModel {
 
 /// AnchorListModel 的展示层扩展(单独文件,插件重新生成 model 不会丢失)
 extension AnchorListModelExt on AnchorListModel {
+  /// 预约时间(createTime)格式化为 HH:mm
+  String get createTimeHM {
+    final String? t = createTime;
+    if (t == null || t.isEmpty) return '';
+    final DateTime? parsed = DateTime.tryParse(t);
+    if (parsed == null) return t;
+    return '${parsed.hour.toString().padLeft(2, '0')}:${parsed.minute.toString().padLeft(2, '0')}';
+  }
+
   /// 下单时间格式化为 HH:mm
   String get orderTimeHM {
     final String? t = preOrderTime;

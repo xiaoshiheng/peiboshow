@@ -1,16 +1,27 @@
 import 'package:get/get.dart';
+import 'package:peiboshow/models/confirmed_anchor_model.dart';
 
 import '../../api_request/api_request.dart';
 import '../../api_request/api_request_client.dart';
 import '../../models/anchor_list_model.dart';
 
 class AnchorListController extends GetxController {
-  AnchorListController({required this.roomId});
+  AnchorListController({required this.roomId, this.autoLoad = true});
 
   final int roomId;
 
+  /// 是否在 onInit 自动请求主播列表(已确认主播面板传 false)
+  final bool autoLoad;
+
   /// 主播列表
   final RxList<AnchorListModel> anchors = <AnchorListModel>[].obs;
+
+  /// 已确认主播列表
+  final RxList<ConfirmedAnchorModel> confirmedAnchors = <ConfirmedAnchorModel>[].obs;
+
+
+  /// 已确认主播加载状态
+  final RxBool confirmedLoading = false.obs;
 
   /// 加载状态
   final RxBool loading = true.obs;
@@ -21,7 +32,7 @@ class AnchorListController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    getAnchorList();
+    if (autoLoad) getAnchorList();
   }
 
   /// 请求主播列表(每次进入面板都会新建控制器并调用)
@@ -78,5 +89,23 @@ class AnchorListController extends GetxController {
       await requestClient.post('/wx-zhibo-room-item/addOrder',
           data: {'id': item.id});
     });
+  }
+
+  ///已确认主播:返回数据格式与 getAnchorList 一致
+  Future<bool> confirmAnchor() async {
+    confirmedLoading.value = true;
+    final bool ok = await request(() async {
+      final Map<String, dynamic> response = await requestClient.post(
+        '/wx-zhibo-room-item/itemListByRoomAndOrder',
+        data: {'roomId': roomId},
+      );
+      final List list = (response['list'] as List?) ?? [];
+      confirmedAnchors.assignAll(list
+          .map((x) =>
+          ConfirmedAnchorModel.fromJson(Map<String, dynamic>.from(x as Map)))
+          .toList());
+    }, showLoading: false);
+    confirmedLoading.value = false;
+    return ok;
   }
 }

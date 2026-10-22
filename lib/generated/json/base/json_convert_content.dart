@@ -7,6 +7,7 @@ import 'package:flutter/material.dart' show debugPrint;
 import 'package:peiboshow/models/add_anchor_model.dart';
 import 'package:peiboshow/models/anchor_list_model.dart';
 import 'package:peiboshow/models/anchor_model.dart';
+import 'package:peiboshow/models/confirmed_anchor_model.dart';
 import 'package:peiboshow/models/dan_mu_model.dart';
 import 'package:peiboshow/models/hu_dong_dan_mu_model.dart';
 import 'package:peiboshow/models/level_model.dart';
@@ -164,6 +165,10 @@ class JsonConvert {
       return data.map<AnchorModel>((Map<String, dynamic> e) =>
           AnchorModel.fromJson(e)).toList() as M;
     }
+    if (<ConfirmedAnchorModel>[] is M) {
+      return data.map<ConfirmedAnchorModel>((Map<String, dynamic> e) =>
+          ConfirmedAnchorModel.fromJson(e)).toList() as M;
+    }
     if (<DanMuModel>[] is M) {
       return data.map<DanMuModel>((Map<String, dynamic> e) =>
           DanMuModel.fromJson(e)).toList() as M;
@@ -216,6 +221,7 @@ class JsonConvertClassCollection {
     (AddAnchorModel).toString(): AddAnchorModel.fromJson,
     (AnchorListModel).toString(): AnchorListModel.fromJson,
     (AnchorModel).toString(): AnchorModel.fromJson,
+    (ConfirmedAnchorModel).toString(): ConfirmedAnchorModel.fromJson,
     (DanMuModel).toString(): DanMuModel.fromJson,
     (HuDongDanMuModel).toString(): HuDongDanMuModel.fromJson,
     (LevelModel).toString(): LevelModel.fromJson,

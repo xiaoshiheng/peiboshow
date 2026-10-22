@@ -8,6 +8,7 @@ import '../pages/controller/danmu_controller.dart';
 import '../pages/controller/live_feed_page_controller.dart';
 import 'add_anchor_panel.dart';
 import 'anchor_list_panel.dart';
+import 'confirmed_anchor_panel.dart';
 import 'danmu_view.dart';
 import 'top_banner_marquee.dart';
 
@@ -351,7 +352,7 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
             ),
           ),
 
-        // 右下角按钮组:添加主播在左,查看主播在右,点击右侧划入对应半屏面板
+        // 右下角按钮组:已确认主播在左,添加主播居中,查看主播在右,点击右侧划入对应半屏面板
         if (widget.room.status == 1 && widget.room.id != null)
           Positioned(
             right: 16,
@@ -359,6 +360,23 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                ElevatedButton.icon(
+                  onPressed: () => Navigator.of(context)
+                      .push(ConfirmedAnchorRoute(roomId: widget.room.id!)),
+                  icon: const Icon(Icons.fact_check_outlined, size: 16),
+                  label:
+                      const Text('已确认主播', style: TextStyle(fontSize: 12)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black.withOpacity(0.5),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 8),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18)),
+                  ),
+                ),
+                const SizedBox(width: 8),
                 ElevatedButton.icon(
                   onPressed: () => Navigator.of(context)
                       .push(AddAnchorRoute(roomId: widget.room.id!)),
