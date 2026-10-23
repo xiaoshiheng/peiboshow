@@ -161,7 +161,7 @@ class _ConfirmedAnchorPanelState extends State<ConfirmedAnchorPanel> {
         children: [
           const Icon(Icons.fact_check_outlined, color: Colors.white, size: 20),
           const SizedBox(width: 8),
-          const Text('已确认会员',
+          const Text('已确认主播',
               style: TextStyle(
                   color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
           const Spacer(),
