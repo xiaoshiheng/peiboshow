@@ -79,6 +79,7 @@ class AnchorListController extends GetxController {
           data: {
             'roomId': roomId,
             'ids': [item.sitem?.id ?? 0],
+            'setAppoint':true,
           });
     });
   }
