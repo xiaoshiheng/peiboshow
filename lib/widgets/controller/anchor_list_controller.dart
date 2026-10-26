@@ -45,6 +45,7 @@ class AnchorListController extends GetxController {
         'online': true,
         'roomId': roomId,
         'orderByPreTimeDesc': true,
+        'available':true,
       };
       // 全部状态不传 tempOrder,已/未一见倾心分别传 true/false
       final int? like = likeFilter.value;
