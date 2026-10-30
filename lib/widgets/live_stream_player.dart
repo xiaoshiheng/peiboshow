@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:fijkplayer/fijkplayer.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -35,10 +37,28 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
   bool _hasError = false;
   String _errorMessage = '';
 
+  /// 轻量重建中(分辨率变化/卡顿看门狗触发,不重新拉取房间信息)
+  bool _rebuilding = false;
+
+  /// 最近一次已知的视频分辨率。主播切换清晰度会改变此值,
+  /// 用作"清晰度切换"的精确检测信号。
+  Size _lastVideoSize = Size.zero;
+
+  /// 分辨率变化后的防抖重建定时器
+  Timer? _sizeRebuildTimer;
+
+  /// 卡顿看门狗:激活页应播放却长时间不出画面时自动重建
+  Timer? _stallWatchdog;
+
+  /// 连续处于"非 started"态的起始时间,用于卡顿判定
+  DateTime? _stalledSince;
+
   @override
   void initState() {
     super.initState();
     _initializePlayer();
+    // 启动卡顿看门狗,兜底处理主播切清晰度/推流抖动导致的画面冻结
+    _startStallWatchdog();
     if (widget.isActive) {
       _ensureDanmu();
     }
@@ -83,9 +103,18 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
     try {
       final FijkPlayer player = FijkPlayer();
       _player = player;
-      await player.setDataSource(widget.room.httpPullUrl ?? "",
-          autoPlay: widget.isActive);
 
+      // 关闭硬件解码:主播切换清晰度会重配编码器(新的 SPS/PPS/分辨率),
+      // 硬解(VideoToolbox/MediaCodec)无法在流中途重建解码会话 → 花屏或永久卡死;
+      // 软解可容忍动态分辨率变化,是清晰度切换后能自动恢复画面的关键。
+      // 注意:0.11.0 中 videotoolbox / mediacodec 均为 playerCategory 选项。
+      await player.setOption(FijkOption.playerCategory, "videotoolbox", 0);
+      await player.setOption(FijkOption.playerCategory, "mediacodec", 0);
+      // 网络抖动/推流短暂中断时自动重连,降低清晰度切换时拉流被断开且不再恢复的概率
+      await player.setOption(FijkOption.formatCategory, "reconnect", 1);
+      await player.setOption(FijkOption.formatCategory, "reconnect_delay_max", 2);
+
+      // 先注册监听器再 setDataSource,确保不漏掉 size/state 的首个回调
       player.addListener(() {
         // 旧 player 的回调不再影响新 player
         if (!mounted || _player != player) return;
@@ -94,16 +123,34 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
         if (isPlaying != _isPlaying) {
           setState(() => _isPlaying = isPlaying);
         }
+
         if (state == FijkState.error) {
           setState(() {
             _hasError = true;
             _isInitialized = false;
             _isPlaying = false;
             _errorMessage =
-                '播放错误: ${player.value.exception?.message ?? "未知错误"}';
+                '播放错误: ${player.value.exception.message ?? "未知错误"}';
           });
+          return;
+        }
+
+        // 分辨率变化检测:主播切清晰度会改变视频 size(0.11.0 中 size 为 Size?)。
+        // 已经出过画面后又变化 = 清晰度切换 → 防抖后轻量重建,从新关键帧重新起播。
+        final newSize = player.value.size;
+        if (newSize != null &&
+            newSize != Size.zero &&
+            newSize != _lastVideoSize) {
+          final hadRendered = _lastVideoSize != Size.zero;
+          _lastVideoSize = newSize;
+          if (hadRendered) {
+            _scheduleRebuild(delay: const Duration(milliseconds: 800));
+          }
         }
       });
+
+      await player.setDataSource(widget.room.httpPullUrl ?? "",
+          autoPlay: widget.isActive);
 
       setState(() => _isInitialized = true);
       debugPrint('✅ Stream initialized: ${widget.room.id}');
@@ -132,15 +179,75 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
 
   /// 释放旧播放器并重新初始化(重试)
   Future<void> _retry() async {
-    setState(() {
-      _isInitialized = false;
-      _hasError = false;
-      _errorMessage = '';
+    await _rebuildPlayer();
+  }
+
+  /// 调度一次轻量重建(仅重连当前拉流地址,不重新拉取房间信息)。
+  /// 用于主播切换清晰度导致的分辨率变化 / 流冻结恢复。
+  void _scheduleRebuild({Duration delay = const Duration(milliseconds: 600)}) {
+    if (_rebuilding) return;
+    // 仅激活页才需要恢复 CDN 画面
+    if (!widget.isActive) return;
+    _sizeRebuildTimer?.cancel();
+    _sizeRebuildTimer = Timer(delay, () {
+      if (!mounted) return;
+      if (_rebuilding) return;
+      if (!widget.isActive) return;
+      _rebuildPlayer();
     });
-    final old = _player;
-    _player = null;
-    await old?.release();
-    await _initializePlayer();
+  }
+
+  /// 释放旧播放器并用相同地址重建(清晰度切换场景 roomId 不变,无需网络重拉房间)。
+  Future<void> _rebuildPlayer() async {
+    if (_rebuilding) return;
+    _rebuilding = true;
+    _sizeRebuildTimer?.cancel();
+    _stalledSince = null;
+    _lastVideoSize = Size.zero;
+    try {
+      setState(() {
+        _isInitialized = false;
+        _hasError = false;
+        _errorMessage = '';
+      });
+      final old = _player;
+      _player = null;
+      await old?.release();
+      await _initializePlayer();
+      if (mounted) setState(() {});
+      debugPrint('♻️ [CDN] 清晰度切换/卡顿,已重建播放器: ${widget.room.id}');
+    } finally {
+      _rebuilding = false;
+    }
+  }
+
+  /// 卡顿看门狗:激活且应播放的页面若长时间未进入 started 态,自动轻量重建。
+  /// 兜底覆盖"size 未变但流冻结"的场景(如仅码率变化的清晰度切换)。
+  void _startStallWatchdog() {
+    _stallWatchdog?.cancel();
+    _stallWatchdog = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (!mounted) return;
+      final player = _player;
+      if (player == null) return;
+      // 离屏页 / 错误态 / 重建中 / 未初始化完成:不参与卡顿判定
+      if (!widget.isActive ||
+          _hasError ||
+          _rebuilding ||
+          !_isInitialized) {
+        _stalledSince = null;
+        return;
+      }
+      if (player.value.state == FijkState.started) {
+        _stalledSince = null;
+      } else {
+        _stalledSince ??= DateTime.now();
+        if (DateTime.now().difference(_stalledSince!) >
+            const Duration(seconds: 8)) {
+          _stalledSince = null;
+          _scheduleRebuild(delay: Duration.zero);
+        }
+      }
+    });
   }
 
   Future<void> _pause() async {
@@ -462,6 +569,8 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
 
   @override
   void dispose() {
+    _sizeRebuildTimer?.cancel();
+    _stallWatchdog?.cancel();
     _disposeDanmu();
     _player?.release();
     _player?.dispose();
