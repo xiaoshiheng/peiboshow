@@ -49,7 +49,7 @@ class _LiveFeedPageState extends State<LiveFeedPage> {
           if (rooms == null || rooms.isEmpty) {
             return const Center(
               child: Text(
-                '暂无才艺间',
+                '暂无直播间',
                 style: TextStyle(color: Colors.white, fontSize: 16),
               ),
             );
@@ -117,9 +117,18 @@ class _LiveFeedPageState extends State<LiveFeedPage> {
             }
           },
         ),
-        title: const Text(
-          '才艺广场',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        title: GetBuilder<LiveFeedPageController>(
+          id: "live_feed_page",
+          builder: (controller) {
+            final rooms = controller.rooms;
+            final roomName = (rooms != null && rooms.isNotEmpty && _currentIndex < rooms.length)
+                ? rooms[_currentIndex].roomName ?? '展示广场'
+                : '展示广场';
+            return Text(
+              roomName,
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            );
+          },
         ),
         centerTitle: true,
         actions: [
@@ -153,7 +162,7 @@ class _LiveFeedPageState extends State<LiveFeedPage> {
               onPressed: () => Scaffold.of(context).openEndDrawer(),
               icon: const Icon(Icons.menu, color: Colors.white, size: 20),
               label: const Text(
-                '更多才艺间',
+                '更多直播间',
                 style: TextStyle(color: Colors.white, fontSize: 13),
               ),
             ),
