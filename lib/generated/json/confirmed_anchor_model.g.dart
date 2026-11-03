@@ -44,6 +44,10 @@ ConfirmedAnchorModel $ConfirmedAnchorModelFromJson(Map<String, dynamic> json) {
   if (itemName != null) {
     confirmedAnchorModel.itemName = itemName;
   }
+  final int? arriveFlag = jsonConvert.convert<int>(json['arriveFlag']);
+  if (arriveFlag != null) {
+    confirmedAnchorModel.arriveFlag = arriveFlag;
+  }
   return confirmedAnchorModel;
 }
 
@@ -59,6 +63,7 @@ Map<String, dynamic> $ConfirmedAnchorModelToJson(ConfirmedAnchorModel entity) {
   data['preOrderTime'] = entity.preOrderTime;
   data['roomName'] = entity.roomName;
   data['itemName'] = entity.itemName;
+  data['arriveFlag'] = entity.arriveFlag;
   return data;
 }
 
@@ -74,6 +79,7 @@ extension ConfirmedAnchorModelExtension on ConfirmedAnchorModel {
     String? preOrderTime,
     String? roomName,
     String? itemName,
+    int? arriveFlag,
   }) {
     return ConfirmedAnchorModel()
       ..id = id ?? this.id
@@ -85,6 +91,7 @@ extension ConfirmedAnchorModelExtension on ConfirmedAnchorModel {
       ..roomName0 = roomName0 ?? this.roomName0
       ..preOrderTime = preOrderTime ?? this.preOrderTime
       ..roomName = roomName ?? this.roomName
-      ..itemName = itemName ?? this.itemName;
+      ..itemName = itemName ?? this.itemName
+      ..arriveFlag = arriveFlag ?? this.arriveFlag;
   }
 }

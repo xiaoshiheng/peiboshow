@@ -65,6 +65,9 @@ class _ConfirmedAnchorPanelState extends State<ConfirmedAnchorPanel> {
   /// 表头背景色
   static const Color _headerBg = Colors.white10;
 
+  /// 搜索栏高度:搜索框与筛选按钮共用,保证高度一致且内容垂直居中
+  static const double _barHeight = 38;
+
   String get _tag => 'confirmed_anchor_${widget.roomId}';
 
   /// 每次打开面板新建控制器(autoLoad=false 不请求主播列表),关闭时销毁
@@ -82,6 +85,9 @@ class _ConfirmedAnchorPanelState extends State<ConfirmedAnchorPanel> {
   /// 搜索关键词(本地按会员名 itemName 过滤,不请求接口)
   String _keyword = '';
 
+  /// 是否到场筛选:null=全部, 1=已到场, 0=未到场
+  int? _arriveFilter;
+
   @override
   void initState() {
     super.initState();
@@ -97,22 +103,20 @@ class _ConfirmedAnchorPanelState extends State<ConfirmedAnchorPanel> {
     super.dispose();
   }
 
-  /// 本地搜索:通过会员名 itemName 过滤
+  /// 本地搜索:通过会员名 itemName 过滤 + 是否到场筛选
   List<ConfirmedAnchorModel> get _filteredList {
-    final List<ConfirmedAnchorModel> list = _controller.confirmedAnchors;
-    if (_keyword.isEmpty) return list;
-    return list
-        .where((e) => (e.itemName ?? '').contains(_keyword))
-        .toList();
+    List<ConfirmedAnchorModel> list = _controller.confirmedAnchors;
+    if (_keyword.isNotEmpty) {
+      list = list.where((e) => (e.itemName ?? '').contains(_keyword)).toList();
+    }
+    if (_arriveFilter != null) {
+      list = list.where((e) => e.arriveFlag == _arriveFilter).toList();
+    }
+    return list;
   }
 
   void _onSearchChanged(String value) {
     setState(() => _keyword = value.trim());
-  }
-
-  void _onSearchTap() {
-    setState(() => _keyword = _searchController.text.trim());
-    _searchFocusNode.unfocus();
   }
 
   /// 下拉刷新
@@ -127,8 +131,8 @@ class _ConfirmedAnchorPanelState extends State<ConfirmedAnchorPanel> {
 
   @override
   Widget build(BuildContext context) {
-    // 半屏:取屏幕宽度一半;手机上保证最小可用宽度
-    final double width = max(MediaQuery.of(context).size.width * 0.5, 300);
+    // 半屏:列数较多,适当加宽;手机上保证最小可用宽度
+    final double width = max(MediaQuery.of(context).size.width * 0.55, 340);
     return Align(
       alignment: Alignment.centerRight,
       child: Material(
@@ -174,7 +178,7 @@ class _ConfirmedAnchorPanelState extends State<ConfirmedAnchorPanel> {
     );
   }
 
-  /// 搜索栏:深色输入框 + 强调色搜索文字(与 AddAnchorPanel 一致,本地过滤)
+  /// 搜索栏:深色输入框 + 右侧是否到场筛选(本地过滤)
   Widget _buildSearchBar() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
@@ -182,6 +186,7 @@ class _ConfirmedAnchorPanelState extends State<ConfirmedAnchorPanel> {
         children: [
           Expanded(
             child: Container(
+              height: _barHeight,
               padding: const EdgeInsets.symmetric(horizontal: 10),
               decoration: BoxDecoration(
                 color: Colors.white10,
@@ -197,7 +202,6 @@ class _ConfirmedAnchorPanelState extends State<ConfirmedAnchorPanel> {
                       controller: _searchController,
                       focusNode: _searchFocusNode,
                       onChanged: _onSearchChanged,
-                      onSubmitted: (_) => _onSearchTap(),
                       style: const TextStyle(fontSize: 13, color: Colors.white),
                       decoration: const InputDecoration(
                         hintText: '请输入',
@@ -214,13 +218,63 @@ class _ConfirmedAnchorPanelState extends State<ConfirmedAnchorPanel> {
             ),
           ),
           const SizedBox(width: 10),
-          GestureDetector(
-            onTap: _onSearchTap,
-            child: const Text(
-              '搜索',
-              style: TextStyle(fontSize: 15, color: _accent),
-            ),
+          _buildArriveFilter(),
+        ],
+      ),
+    );
+  }
+
+  /// 是否到场筛选按钮:全部/已到场/未到场,默认全部(与搜索框同高,文字垂直居中)
+  Widget _buildArriveFilter() {
+    final String label =
+        _arriveFilter == null ? '全部' : (_arriveFilter == 1 ? '已到场' : '未到场');
+    return PopupMenuButton<int>(
+      color: _bg,
+      offset: Offset(0, _barHeight + 4),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      onSelected: (value) =>
+          setState(() => _arriveFilter = value == -1 ? null : value),
+      itemBuilder: (context) => [
+        _arriveMenuItem(-1, '全部'),
+        _arriveMenuItem(1, '已到场'),
+        _arriveMenuItem(0, '未到场'),
+      ],
+      child: Container(
+        height: _barHeight,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        decoration: BoxDecoration(
+          color: Colors.white10,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.white24),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(label,
+                style: const TextStyle(fontSize: 13, color: _accent)),
+            const Icon(Icons.arrow_drop_down, color: Colors.white54, size: 18),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 筛选菜单项:选中项以强调色 + 对勾高亮
+  PopupMenuItem<int> _arriveMenuItem(int value, String text) {
+    final bool selected =
+        (_arriveFilter == null && value == -1) || _arriveFilter == value;
+    return PopupMenuItem<int>(
+      value: value,
+      height: 36,
+      child: Row(
+        children: [
+          Text(
+            text,
+            style:
+                TextStyle(fontSize: 13, color: selected ? _accent : Colors.white),
           ),
+          const Spacer(),
+          if (selected) const Icon(Icons.check, size: 14, color: _accent),
         ],
       ),
     );
@@ -281,13 +335,14 @@ class _ConfirmedAnchorPanelState extends State<ConfirmedAnchorPanel> {
     );
   }
 
-  /// 五列表格:序号/预约时间/预约人/集合地/主播名称
+  /// 六列表格:序号/预约时间/预约人/集合地/主播名称/是否到场
   Widget _buildTable(List<ConfirmedAnchorModel> list) {
     return Table(
       border: TableBorder.all(color: _border, width: 0.8),
       defaultColumnWidth: const FlexColumnWidth(1),
       columnWidths: const {
         0: FlexColumnWidth(0.4),
+        5: FlexColumnWidth(0.8),
       },
       children: [
         const TableRow(
@@ -298,6 +353,7 @@ class _ConfirmedAnchorPanelState extends State<ConfirmedAnchorPanel> {
             _HeaderCell('预约人'),
             _HeaderCell('集合地'),
             _HeaderCell('主播名称'),
+            _HeaderCell('是否到场'),
           ],
         ),
         ...list.asMap().entries.map(
@@ -308,6 +364,7 @@ class _ConfirmedAnchorPanelState extends State<ConfirmedAnchorPanel> {
               _Cell(entry.value.managerName ?? ''),
               _Cell(entry.value.roomName0 ?? ''),
               _Cell(entry.value.itemName ?? ''),
+              _Cell(entry.value.arriveFlag == 1 ? '已到场' : '未到场'),
             ],
           ),
         ),

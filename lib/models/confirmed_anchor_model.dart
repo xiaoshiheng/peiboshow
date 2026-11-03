@@ -15,6 +15,7 @@ class ConfirmedAnchorModel {
 	String? preOrderTime;
 	String? roomName;
 	String? itemName;
+	int? arriveFlag;//0,未到场，1已到场
 
 	ConfirmedAnchorModel();
 
