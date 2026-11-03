@@ -44,8 +44,12 @@ class LoginView extends GetView<LoginController> {
                 const SizedBox(height: 40),
                 _buildPhoneField(),
                 const SizedBox(height: 16),
-                _buildCodeField(),
-                const SizedBox(height: 32),
+                Obx(() => controller.isPasswordLogin.value
+                    ? _buildPasswordField()
+                    : _buildCodeField()),
+                const SizedBox(height: 8),
+                _buildSwitchLoginModeButton(),
+                const SizedBox(height: 24),
                 _buildLoginButton(context),
               ],
             ),
@@ -89,6 +93,36 @@ class LoginView extends GetView<LoginController> {
     );
   }
 
+  /// 密码输入框
+  Widget _buildPasswordField() {
+    return Obx(
+      () => TextField(
+        controller: controller.passwordController,
+        obscureText: controller.obscurePassword.value,
+        maxLength: 18,
+        textInputAction: TextInputAction.done,
+        style: const TextStyle(color: Colors.white),
+        onSubmitted: (_) => _handleLogin(),
+        decoration: _inputDecoration(
+          hintText: '请输入密码',
+          icon: Icons.lock_outline,
+        ).copyWith(
+          counterText: '',
+          suffixIcon: IconButton(
+            icon: Icon(
+              controller.obscurePassword.value
+                  ? Icons.visibility_off
+                  : Icons.visibility,
+              color: Colors.white54,
+            ),
+            onPressed: () => controller.obscurePassword.value =
+                !controller.obscurePassword.value,
+          ),
+        ),
+      ),
+    );
+  }
+
   /// 获取验证码按钮(含 60s 倒计时)
   Widget _buildSendCodeButton() {
     return Obx(() {
@@ -116,6 +150,22 @@ class LoginView extends GetView<LoginController> {
         ),
       );
     });
+  }
+
+  /// 切换登录模式按钮(右对齐)
+  Widget _buildSwitchLoginModeButton() {
+    return Obx(
+      () => Align(
+        alignment: Alignment.centerRight,
+        child: TextButton(
+          onPressed: controller.toggleLoginMode,
+          child: Text(
+            controller.isPasswordLogin.value ? '验证码登录' : '密码登录',
+            style: const TextStyle(fontSize: 13, color: Colors.red),
+          ),
+        ),
+      ),
+    );
   }
 
   /// 登录按钮
@@ -188,7 +238,9 @@ class LoginView extends GetView<LoginController> {
 
   /// 处理登录点击
   Future<void> _handleLogin() async {
-    final error = controller.validate();
+    final error = controller.isPasswordLogin.value
+        ? controller.validatePasswordLogin()
+        : controller.validate();
     if (error != null) {
       _showMessage(error);
       return;
@@ -196,7 +248,11 @@ class LoginView extends GetView<LoginController> {
 
     controller.isLoading.value = true;
     try {
-      await controller.login();
+      if (controller.isPasswordLogin.value) {
+        await controller.passwordLogin();
+      } else {
+        await controller.login();
+      }
     } finally {
       controller.isLoading.value = false;
     }

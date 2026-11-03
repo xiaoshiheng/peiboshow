@@ -22,6 +22,15 @@ class LoginController extends GetxController {
   /// 验证码输入控制器
   final TextEditingController codeController = TextEditingController();
 
+  ///密码
+  final TextEditingController passwordController = TextEditingController();
+
+  /// 是否为密码登录模式，默认 false(验证码登录)
+  final RxBool isPasswordLogin = false.obs;
+
+  /// 密码是否隐藏
+  final RxBool obscurePassword = true.obs;
+
   /// 是否正在登录
   final RxBool isLoading = false.obs;
 
@@ -66,6 +75,27 @@ class LoginController extends GetxController {
       return '请输入正确的验证码';
     }
     return null;
+  }
+
+  /// 密码校验(6-18 位)，校验通过返回 null，否则返回错误提示
+  String? validatePassword() {
+    final password = passwordController.text.trim();
+    if (password.isEmpty) {
+      return '请输入密码';
+    }
+    if (password.length < 6 || password.length > 18) {
+      return '密码长度需为6-18位';
+    }
+    return null;
+  }
+
+  /// 手机号 + 密码校验，校验通过返回 null，否则返回错误提示
+  String? validatePasswordLogin() {
+    final phoneError = validatePhone();
+    if (phoneError != null) {
+      return phoneError;
+    }
+    return validatePassword();
   }
 
   /// 获取验证码事件
@@ -124,6 +154,31 @@ class LoginController extends GetxController {
     });
   }
 
+  ///密码登录
+  Future<void> passwordLogin() async {
+    debugPrint('登录手机号: ${phoneController.text.trim()}');
+    debugPrint('登录密码: ${passwordController.text.trim()}');
+    request(()async{
+      Map<String, dynamic> response = await requestClient.post("/login",data: {"username":phoneController.text,"password":passwordController.text});
+      print(response);
+      globalController.userModel = UserModel.fromJson(response["user"]);
+      globalController.token = response["token"];
+      await globalController.saveToken(globalController.token ?? "", globalController.userModel);
+      if (globalController.token != null && globalController.token!.isNotEmpty) {
+        //需要先判断有没有绑定过包厢，如果没有绑定过包厢，先跳转到绑定包厢页面
+        Get.offNamed(AllRoutes.liveFeedPage);
+      }
+    },onError: (exception){
+      SmartDialog.showNotify(msg: exception.message ?? ApiException.unknownException, notifyType: NotifyType.error);
+      return true;
+    });
+  }
+
+  /// 切换登录模式(验证码登录 <-> 密码登录)
+  void toggleLoginMode() {
+    isPasswordLogin.value = !isPasswordLogin.value;
+  }
+
   /// 启动 60s 倒计时
   void _startCountdown() {
     countdown.value = _countdownSeconds;
@@ -144,6 +199,7 @@ class LoginController extends GetxController {
     _timer = null;
     phoneController.dispose();
     codeController.dispose();
+    passwordController.dispose();
     super.onClose();
   }
 }
