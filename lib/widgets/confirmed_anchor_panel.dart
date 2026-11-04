@@ -364,7 +364,10 @@ class _ConfirmedAnchorPanelState extends State<ConfirmedAnchorPanel> {
               _Cell(entry.value.managerName ?? ''),
               _Cell(entry.value.roomName0 ?? ''),
               _Cell(entry.value.itemName ?? ''),
-              _Cell(entry.value.arriveFlag == 1 ? '已到场' : '未到场'),
+              _Cell(
+                entry.value.arriveFlag == 1 ? '已到场' : '未到场',
+                color: entry.value.arriveFlag == 1 ? null : Colors.red,
+              ),
             ],
           ),
         ),
@@ -398,8 +401,9 @@ class _HeaderCell extends StatelessWidget {
 /// 数据单元格:居中,超长省略
 class _Cell extends StatelessWidget {
   final String text;
+  final Color? color;
 
-  const _Cell(this.text);
+  const _Cell(this.text, {this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -410,7 +414,7 @@ class _Cell extends StatelessWidget {
         textAlign: TextAlign.center,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: const TextStyle(color: Colors.white70, fontSize: 13),
+        style: TextStyle(color: color ?? Colors.white70, fontSize: 13),
       ),
     );
   }
