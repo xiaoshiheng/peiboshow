@@ -462,7 +462,10 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
           ),
 
         // 右下角按钮组:已确认主播在左,添加主播居中,查看主播在右,点击右侧划入对应半屏面板
-        if (widget.room.status == 1 && widget.room.id != null)
+        // 仅当已成为当前直播间管理员(isAdmin==true)时显示,与下播按钮权限逻辑一致
+        if (widget.room.status == 1 &&
+            widget.room.id != null &&
+            widget.room.isAdmin == true)
           Positioned(
             right: 16,
             bottom: 24,
