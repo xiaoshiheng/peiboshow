@@ -89,33 +89,46 @@ class _LiveFeedPageState extends State<LiveFeedPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.logout, color: Colors.white),
-          tooltip: '退出登录',
-          onPressed: () async {
-            final confirmed = await showDialog<bool>(
-              context: context,
-              builder: (ctx) => AlertDialog(
-                title: const Text('退出登录'),
-                content: const Text('确定要退出登录吗？'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(ctx).pop(false),
-                    child: const Text('取消'),
+        leadingWidth: 160,
+        leading: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.logout, color: Colors.white),
+              tooltip: '退出登录',
+              onPressed: () async {
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('退出登录'),
+                    content: const Text('确定要退出登录吗？'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(ctx).pop(false),
+                        child: const Text('取消'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.of(ctx).pop(true),
+                        child: const Text('确定', style: TextStyle(color: Colors.red)),
+                      ),
+                    ],
                   ),
-                  TextButton(
-                    onPressed: () => Navigator.of(ctx).pop(true),
-                    child: const Text('确定', style: TextStyle(color: Colors.red)),
-                  ),
-                ],
+                );
+                if (confirmed == true) {
+                  final globalController = Get.find<GlobalController>();
+                  await globalController.logout();
+                  Get.offAllNamed(AllRoutes.login);
+                }
+              },
+            ),
+            Flexible(
+              child: Text(
+                '（${Get.find<GlobalController>().userModel?.nick ?? ''}）',
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: Colors.white, fontSize: 13),
               ),
-            );
-            if (confirmed == true) {
-              final globalController = Get.find<GlobalController>();
-              await globalController.logout();
-              Get.offAllNamed(AllRoutes.login);
-            }
-          },
+            ),
+          ],
         ),
         title: GetBuilder<LiveFeedPageController>(
           id: "live_feed_page",
