@@ -176,6 +176,16 @@ LiveRoomModel $LiveRoomModelFromJson(Map<String, dynamic> json) {
   if (isAdmin != null) {
     liveRoomModel.isAdmin = isAdmin;
   }
+  final String? hostUserName = jsonConvert.convert<String>(
+      json['hostUserName']);
+  if (hostUserName != null) {
+    liveRoomModel.hostUserName = hostUserName;
+  }
+  final String? adminUserNames = jsonConvert.convert<String>(
+      json['adminUserNames']);
+  if (adminUserNames != null) {
+    liveRoomModel.adminUserNames = adminUserNames;
+  }
   return liveRoomModel;
 }
 
@@ -223,6 +233,8 @@ Map<String, dynamic> $LiveRoomModelToJson(LiveRoomModel entity) {
   data['zhiboNumStart'] = entity.zhiboNumStart;
   data['zhiboNumEnd'] = entity.zhiboNumEnd;
   data['isAdmin'] = entity.isAdmin;
+  data['hostUserName'] = entity.hostUserName;
+  data['adminUserNames'] = entity.adminUserNames;
   return data;
 }
 
@@ -270,6 +282,8 @@ extension LiveRoomModelExtension on LiveRoomModel {
     int? zhiboNumStart,
     int? zhiboNumEnd,
     bool? isAdmin,
+    String? hostUserName,
+    String? adminUserNames,
   }) {
     return LiveRoomModel()
       ..id = id ?? this.id
@@ -313,6 +327,8 @@ extension LiveRoomModelExtension on LiveRoomModel {
       ..isFull = isFull ?? this.isFull
       ..zhiboNumStart = zhiboNumStart ?? this.zhiboNumStart
       ..zhiboNumEnd = zhiboNumEnd ?? this.zhiboNumEnd
-      ..isAdmin = isAdmin ?? this.isAdmin;
+      ..isAdmin = isAdmin ?? this.isAdmin
+      ..hostUserName = hostUserName ?? this.hostUserName
+      ..adminUserNames = adminUserNames ?? this.adminUserNames;
   }
 }

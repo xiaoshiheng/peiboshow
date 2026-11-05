@@ -132,9 +132,20 @@ class _LiveRoomListViewState extends State<LiveRoomListView> {
                                         backgroundImage:
                                             NetworkImage(room.picUrl!),
                                       ),
-                                title: Text(
-                                  room.roomName ?? '未命名直播间',
-                                  style: const TextStyle(color: Colors.white),
+                                title: Text.rich(
+                                  TextSpan(
+                                    style: const TextStyle(color: Colors.white),
+                                    children: [
+                                      TextSpan(text: room.roomName ?? '未命名直播间'),
+                                      if ((room.hostUserName ?? '').isNotEmpty)
+                                        TextSpan(
+                                          text: '（${room.hostUserName}）',
+                                          style: const TextStyle(
+                                              color: Colors.white54,
+                                              fontSize: 12),
+                                        ),
+                                    ],
+                                  ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),

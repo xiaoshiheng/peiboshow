@@ -134,12 +134,23 @@ class _LiveFeedPageState extends State<LiveFeedPage> {
           id: "live_feed_page",
           builder: (controller) {
             final rooms = controller.rooms;
-            final roomName = (rooms != null && rooms.isNotEmpty && _currentIndex < rooms.length)
+            final hasRoom = rooms != null && rooms.isNotEmpty && _currentIndex < rooms.length;
+            final roomName = hasRoom
                 ? rooms[_currentIndex].roomName ?? '展示广场'
                 : '展示广场';
-            return Text(
-              roomName,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            final hostUserName = hasRoom ? rooms[_currentIndex].hostUserName ?? '' : '';
+            return Text.rich(
+              TextSpan(
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                children: [
+                  TextSpan(text: roomName),
+                  if (hostUserName.isNotEmpty)
+                    TextSpan(
+                      text: '（$hostUserName）',
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
+                    ),
+                ],
+              ),
             );
           },
         ),

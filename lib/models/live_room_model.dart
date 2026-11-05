@@ -49,6 +49,8 @@ class LiveRoomModel {
 	int? zhiboNumStart;
 	int? zhiboNumEnd;
 	bool? isAdmin;
+	String? hostUserName;
+	String? adminUserNames;
 
 
 	LiveRoomModel();
