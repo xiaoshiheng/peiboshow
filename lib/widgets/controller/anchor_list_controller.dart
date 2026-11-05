@@ -74,14 +74,16 @@ class AnchorListController extends GetxController {
   }
 
   /// 移出直播间
-  Future<bool> removeAnchor(AnchorListModel item) async {
+  Future<bool> removeAnchor(AnchorListModel item, {bool setAppoint = false}) async {
     return await request(() async {
-      await requestClient.post('/wx-zhibo-room-item/batchLeaveItem',
-          data: {
-            'roomId': roomId,
-            'ids': [item.sitem?.id ?? 0],
-            'setAppoint':true,
-          });
+      final Map<String, dynamic> data = {
+        'roomId': roomId,
+        'ids': [item.sitem?.id ?? 0],
+      };
+      if (setAppoint) {
+        data['setAppoint'] = true;
+      }
+      await requestClient.post('/wx-zhibo-room-item/batchLeaveItem', data: data);
     });
   }
 

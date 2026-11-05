@@ -126,6 +126,40 @@ class _AnchorListPanelState extends State<AnchorListPanel> {
     }
   }
 
+  /// 移除并预约
+  Future<void> _onRemoveAndAppoint(AnchorListModel item) async {
+    final name = item.sitem?.name ?? '该主播';
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xFF2A2A2C),
+        title: const Text('提示',
+            style: TextStyle(color: Colors.white, fontSize: 16)),
+        content: Text('确定将 $name 移出才艺间并预约吗?',
+            style: const TextStyle(color: Colors.white70, fontSize: 14)),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('取消',
+                  style: TextStyle(color: Colors.white54))),
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('确定',
+                  style: TextStyle(color: Color(0xFFFFD700)))),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+
+    final ok = await _controller.removeAnchor(item, setAppoint: true);
+    if (ok) {
+      SmartDialog.showToast('已移出并预约');
+      _controller.getAnchorList();
+    } else {
+      SmartDialog.showToast('移出并预约失败');
+    }
+  }
+
   /// 确认前往(managerId>0 时显示)
   Future<void> _onConfirmGo(AnchorListModel item) async {
     final name = item.roomName0 ?? '';
@@ -441,7 +475,27 @@ class _AnchorListPanelState extends State<AnchorListPanel> {
                 const SizedBox(width: 6),
               ],
               SizedBox(
-                width: 68,
+                width: 72,
+                child: ElevatedButton(
+                  onPressed: () => _onRemoveAndAppoint(item),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFFD700),
+                    foregroundColor: Colors.black87,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 4, vertical: 6),
+                    minimumSize: const Size(0, 0),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    textStyle: const TextStyle(fontSize: 10),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6)),
+                  ),
+                  child: const Text('移除并预约', maxLines: 1),
+                ),
+              ),
+              const SizedBox(width: 6),
+              SizedBox(
+                width: 50,
                 child: ElevatedButton(
                   onPressed: () => _onRemove(item),
                   style: ElevatedButton.styleFrom(
