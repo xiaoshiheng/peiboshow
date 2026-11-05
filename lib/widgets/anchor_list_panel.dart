@@ -447,18 +447,128 @@ class _AnchorListPanelState extends State<AnchorListPanel> {
             ),
           ),
           const SizedBox(width: 8),
-          // 右侧按钮区:managerId>0(一见倾心) 时额外显示绿色"确认前往"按钮
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              if (hasManager) ...[
+          // 右侧按钮区:竖屏纵向排列,横屏横向排列
+          if (MediaQuery.of(context).orientation == Orientation.portrait)
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                if (hasManager) ...[
+                  SizedBox(
+                    width: 68,
+                    child: ElevatedButton(
+                      onPressed: () => _onConfirmGo(item),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2ECC71),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 4, vertical: 4),
+                        minimumSize: const Size(0, 0),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        textStyle: const TextStyle(fontSize: 10),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6)),
+                      ),
+                      child: const Text('确认前往', maxLines: 1),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                ],
                 SizedBox(
                   width: 68,
                   child: ElevatedButton(
-                    onPressed: () => _onConfirmGo(item),
+                    onPressed: () => _onRemoveAndAppoint(item),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2ECC71),
+                      backgroundColor: const Color(0xFFFFD700),
+                      foregroundColor: Colors.black87,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 4, vertical: 4),
+                      minimumSize: const Size(0, 0),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      textStyle: const TextStyle(fontSize: 10),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6)),
+                    ),
+                    child: const Text('移除并预约', maxLines: 1),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                SizedBox(
+                  width: 68,
+                  child: ElevatedButton(
+                    onPressed: () => _onRemove(item),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFF4D6D),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 4, vertical: 4),
+                      minimumSize: const Size(0, 0),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      textStyle: const TextStyle(fontSize: 10),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6)),
+                    ),
+                    child: const Text('移除', maxLines: 1),
+                  ),
+                ),
+              ],
+            )
+          else
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                if (hasManager) ...[
+                  SizedBox(
+                    width: 68,
+                    child: ElevatedButton(
+                      onPressed: () => _onConfirmGo(item),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2ECC71),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 4, vertical: 6),
+                        minimumSize: const Size(0, 0),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        textStyle: const TextStyle(fontSize: 10),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6)),
+                      ),
+                      child: const Text('确认前往', maxLines: 1),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                ],
+                SizedBox(
+                  width: 72,
+                  child: ElevatedButton(
+                    onPressed: () => _onRemoveAndAppoint(item),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFFD700),
+                      foregroundColor: Colors.black87,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 4, vertical: 6),
+                      minimumSize: const Size(0, 0),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      textStyle: const TextStyle(fontSize: 10),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6)),
+                    ),
+                    child: const Text('移除并预约', maxLines: 1),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                SizedBox(
+                  width: 50,
+                  child: ElevatedButton(
+                    onPressed: () => _onRemove(item),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFF4D6D),
                       foregroundColor: Colors.white,
                       elevation: 0,
                       padding: const EdgeInsets.symmetric(
@@ -469,52 +579,11 @@ class _AnchorListPanelState extends State<AnchorListPanel> {
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(6)),
                     ),
-                    child: const Text('确认前往', maxLines: 1),
+                    child: const Text('移除', maxLines: 1),
                   ),
                 ),
-                const SizedBox(width: 6),
               ],
-              SizedBox(
-                width: 72,
-                child: ElevatedButton(
-                  onPressed: () => _onRemoveAndAppoint(item),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFFD700),
-                    foregroundColor: Colors.black87,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 4, vertical: 6),
-                    minimumSize: const Size(0, 0),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    textStyle: const TextStyle(fontSize: 10),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6)),
-                  ),
-                  child: const Text('移除并预约', maxLines: 1),
-                ),
-              ),
-              const SizedBox(width: 6),
-              SizedBox(
-                width: 50,
-                child: ElevatedButton(
-                  onPressed: () => _onRemove(item),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFF4D6D),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 4, vertical: 6),
-                    minimumSize: const Size(0, 0),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    textStyle: const TextStyle(fontSize: 10),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6)),
-                  ),
-                  child: const Text('移除', maxLines: 1),
-                ),
-              ),
-            ],
-          ),
+            ),
         ],
       ),
     );
