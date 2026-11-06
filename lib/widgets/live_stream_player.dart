@@ -104,10 +104,10 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
       final FijkPlayer player = FijkPlayer();
       _player = player;
 
-      // 关闭硬件解码:主播切换清晰度会重配编码器(新的 SPS/PPS/分辨率),
-      // 硬解(VideoToolbox/MediaCodec)无法在流中途重建解码会话 → 花屏或永久卡死;
-      // 软解可容忍动态分辨率变化,是清晰度切换后能自动恢复画面的关键。
-      // 注意:0.11.0 中 videotoolbox / mediacodec 均为 playerCategory 选项。
+      // 保持硬解开启 + 由 VT 解码器自行处理分辨率变化(真机实证写法,不可改回软解):
+      // 关闭硬解(videotoolbox=0 / mediacodec=0)在主播端竖屏直播时会导致该页面花屏;
+      // videotoolbox-handle-resolution-change=1 使 videotoolbox 解码器在主播切换
+      // 清晰度/横竖屏时自行重建 decompression session,从根上避免花屏与卡死。
       await player.setOption(FijkOption.playerCategory, "videotoolbox", 1);
       await player.setOption(FijkOption.playerCategory, "videotoolbox-handle-resolution-change", 1);
       // await player.setOption(FijkOption.playerCategory, "mediacodec", 0);
@@ -136,8 +136,9 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
           return;
         }
 
-        // 分辨率变化检测:主播切清晰度会改变视频 size(0.11.0 中 size 为 Size?)。
-        // 已经出过画面后又变化 = 清晰度切换 → 防抖后轻量重建,从新关键帧重新起播。
+        // 分辨率/横竖屏变化:videotoolbox-handle-resolution-change=1 下 VT 解码器
+        // 已原生重建会话,此处只更新基线并记录日志,不触发播放器重建
+        // (重建会造成数秒不必要的播放中断);真正的流冻结由卡顿看门狗兜底。
         final newSize = player.value.size;
         if (newSize != null &&
             newSize != Size.zero &&
@@ -145,7 +146,8 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
           final hadRendered = _lastVideoSize != Size.zero;
           _lastVideoSize = newSize;
           if (hadRendered) {
-            _scheduleRebuild(delay: const Duration(milliseconds: 800));
+            debugPrint('📐 [CDN] 视频分辨率变化: '
+                '${newSize.width}x${newSize.height}, VT 解码器原生处理');
           }
         }
       });
