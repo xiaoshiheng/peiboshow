@@ -108,7 +108,8 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
       // 硬解(VideoToolbox/MediaCodec)无法在流中途重建解码会话 → 花屏或永久卡死;
       // 软解可容忍动态分辨率变化,是清晰度切换后能自动恢复画面的关键。
       // 注意:0.11.0 中 videotoolbox / mediacodec 均为 playerCategory 选项。
-      // await player.setOption(FijkOption.playerCategory, "videotoolbox", 0);
+      await player.setOption(FijkOption.playerCategory, "videotoolbox", 1);
+      await player.setOption(FijkOption.playerCategory, "videotoolbox-handle-resolution-change", 1);
       // await player.setOption(FijkOption.playerCategory, "mediacodec", 0);
       // 网络抖动/推流短暂中断时自动重连,降低清晰度切换时拉流被断开且不再恢复的概率
       await player.setOption(FijkOption.formatCategory, "reconnect", 1);
