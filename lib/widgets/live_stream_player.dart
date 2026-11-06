@@ -30,7 +30,8 @@ class LiveStreamPlayer extends StatefulWidget {
   State<LiveStreamPlayer> createState() => _LiveStreamPlayerState();
 }
 
-class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
+class _LiveStreamPlayerState extends State<LiveStreamPlayer>
+    with WidgetsBindingObserver {
   FijkPlayer? _player;
   bool _isInitialized = false;
   bool _isPlaying = false;
@@ -53,9 +54,18 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
   /// 连续处于"非 started"态的起始时间,用于卡顿判定
   DateTime? _stalledSince;
 
+  /// 是否经历过退后台且尚未回前台。退后台后拉流长连接会被系统断开,
+  /// 回前台必须重建播放器,否则会定格旧帧并在读超时后报 Input/output error
+  bool _backgrounded = false;
+
+  /// 回前台后标记播放器待重建;非激活页(PageView 其他页)延迟到激活时再重建
+  bool _needsRestart = false;
+  bool _restarting = false;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initializePlayer();
     // 启动卡顿看门狗,兜底处理主播切清晰度/推流抖动导致的画面冻结
     _startStallWatchdog();
@@ -175,6 +185,11 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
       await _retry();
       return;
     }
+    // 退后台期间拉流连接已死,不能直接 start(),先重建
+    if (_needsRestart) {
+      await _restartPlayer();
+      return;
+    }
     if (_isInitialized) {
       await player.start();
     }
@@ -188,21 +203,23 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
   /// 调度一次轻量重建(仅重连当前拉流地址,不重新拉取房间信息)。
   /// 用于主播切换清晰度导致的分辨率变化 / 流冻结恢复。
   void _scheduleRebuild({Duration delay = const Duration(milliseconds: 600)}) {
-    if (_rebuilding) return;
+    if (_rebuilding || _restarting) return;
     // 仅激活页才需要恢复 CDN 画面
     if (!widget.isActive) return;
     _sizeRebuildTimer?.cancel();
     _sizeRebuildTimer = Timer(delay, () {
       if (!mounted) return;
-      if (_rebuilding) return;
+      if (_rebuilding || _restarting) return;
       if (!widget.isActive) return;
+      // 退后台 / 待回前台重建:交给生命周期逻辑处理,此处不插手
+      if (_backgrounded || _needsRestart) return;
       _rebuildPlayer();
     });
   }
 
   /// 释放旧播放器并用相同地址重建(清晰度切换场景 roomId 不变,无需网络重拉房间)。
   Future<void> _rebuildPlayer() async {
-    if (_rebuilding) return;
+    if (_rebuilding || _restarting) return;
     _rebuilding = true;
     _sizeRebuildTimer?.cancel();
     _stalledSince = null;
@@ -232,10 +249,12 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
       if (!mounted) return;
       final player = _player;
       if (player == null) return;
-      // 离屏页 / 错误态 / 重建中 / 未初始化完成:不参与卡顿判定
+      // 离屏页 / 错误态 / 重建中 / 退后台 / 未初始化完成:不参与卡顿判定
       if (!widget.isActive ||
           _hasError ||
           _rebuilding ||
+          _restarting ||
+          _backgrounded ||
           !_isInitialized) {
         _stalledSince = null;
         return;
@@ -251,6 +270,30 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
         }
       }
     });
+  }
+
+  /// 回前台重建播放器:旧拉流连接已失效,释放后重新拉流(回到直播实时位置)
+  /// 不触碰弹幕控制器(WS 有心跳自愈);若重建后仍失败,走错误态由 _retry() 兜底
+  Future<void> _restartPlayer() async {
+    if (_restarting) return;
+    _restarting = true;
+    _needsRestart = false;
+    _sizeRebuildTimer?.cancel();
+    setState(() {
+      _isInitialized = false;
+      _hasError = false;
+      _errorMessage = '';
+    });
+    try {
+      final old = _player;
+      _player = null;
+      await old?.release();
+      if (!mounted) return;
+      await _initializePlayer();
+      if (mounted) setState(() {});
+    } finally {
+      _restarting = false;
+    }
   }
 
   Future<void> _pause() async {
@@ -573,10 +616,28 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer> {
     return number.toString();
   }
 
+  /// 退后台:暂停播放并记录标记;回前台:重建播放器恢复直播实时画面
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden) {
+      _backgrounded = true;
+      _pause();
+    } else if (state == AppLifecycleState.resumed) {
+      if (!_backgrounded) return;
+      _backgrounded = false;
+      _needsRestart = true;
+      if (widget.isActive) {
+        _restartPlayer();
+      }
+    }
+  }
+
   @override
   void dispose() {
     _sizeRebuildTimer?.cancel();
     _stallWatchdog?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     _disposeDanmu();
     _player?.release();
     _player?.dispose();
