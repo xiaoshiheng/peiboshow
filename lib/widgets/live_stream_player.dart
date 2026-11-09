@@ -85,6 +85,11 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer>
         _pause();
         _disposeDanmu();
       }
+    } else if (widget.isActive &&
+        !identical(oldWidget.room, widget.room)) {
+      // 仍激活但房间数据被刷新(如下播后主播重新开播触发 refresh):
+      // 强制重连弹幕,规避连接假死 / 重连耗尽导致收不到 socket 消息。
+      _ensureDanmu(force: true);
     }
   }
 
@@ -92,11 +97,13 @@ class _LiveStreamPlayerState extends State<LiveStreamPlayer>
   String get _danmuTag => 'danmu_${widget.room.id}';
 
   /// 确保当前房间的弹幕控制器已注册并连接
-  void _ensureDanmu() {
+  /// [force] 为 true 时强制重连(用于房间数据刷新后连接可能假死的场景)
+  void _ensureDanmu({bool force = false}) {
     final roomId = widget.room.id;
     if (roomId == null) return;
     if (Get.isRegistered<DanmuController>(tag: _danmuTag)) {
-      Get.find<DanmuController>(tag: _danmuTag).connect();
+      final controller = Get.find<DanmuController>(tag: _danmuTag);
+      force ? controller.reconnect() : controller.connect();
     } else {
       Get.put(DanmuController(roomId: roomId), tag: _danmuTag);
     }

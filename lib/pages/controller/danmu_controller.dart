@@ -70,8 +70,14 @@ class DanmuController extends GetxController {
   }
 
   /// 建立 WebSocket 连接
-  Future<void> connect() async {
-    if (connected.value) return;
+  /// [force] 为 true 时无视当前 connected 状态,先彻底释放旧连接再重连,
+  /// 并重置重连计数,用于连接假死 / 重连次数耗尽后的强制恢复。
+  Future<void> connect({bool force = false}) async {
+    if (!force && connected.value) return;
+    if (force) {
+      await _closeChannel();
+      _reconnectAttempts = 0;
+    }
     _manualClose = false;
 
     final url = await _buildUrl();
@@ -269,6 +275,14 @@ class DanmuController extends GetxController {
                 if (Get.isRegistered<LiveFeedPageController>()) {
                   await Get.find<LiveFeedPageController>().refresh();
                 }
+                // 主播可能已重新开播:refresh 后按 roomId 重新定位弹幕控制器并强制重连,
+                // 规避旧连接假死 / 重连次数耗尽导致 socket 收不到消息。
+                final tag = 'danmu_$roomId';
+                if (Get.isRegistered<DanmuController>(tag: tag)) {
+                  await Get.find<DanmuController>(tag: tag).reconnect();
+                } else {
+                  Get.put(DanmuController(roomId: roomId), tag: tag);
+                }
               },
               child: const Text('确定',
                   style: TextStyle(color: Color(0xFFFF4D6D))),
@@ -278,6 +292,29 @@ class DanmuController extends GetxController {
       ),
       barrierDismissible: false,
     );
+  }
+
+  /// 强制重建弹幕 WS 连接。
+  /// 用于"主播下播→重新开播→用户点击弹框确认"等场景:旧连接可能已被服务端断开
+  /// 且重连次数耗尽,或处于 connected==true 的假死态,普通 connect() 会被幂等保护
+  /// 拦截,必须强制重连才能恢复消息接收。
+  Future<void> reconnect() async {
+    _offShelfDialogShown = false;
+    await connect(force: true);
+  }
+
+  /// 释放底层 WS 资源(不改变 _manualClose 语义),供 disconnect 与强制重连复用
+  Future<void> _closeChannel() async {
+    _stopHeartbeat();
+    _reconnectTimer?.cancel();
+    _reconnectTimer = null;
+    await _subscription?.cancel();
+    _subscription = null;
+    try {
+      await _channel?.sink.close();
+    } catch (_) {}
+    _channel = null;
+    connected.value = false;
   }
 
   /// 指数退避重连,最多 5 次
@@ -293,14 +330,7 @@ class DanmuController extends GetxController {
   /// 主动断开(页面切走时调用)
   void disconnect() {
     _manualClose = true;
-    _stopHeartbeat();
-    _reconnectTimer?.cancel();
-    _reconnectTimer = null;
-    _subscription?.cancel();
-    _subscription = null;
-    _channel?.sink.close();
-    _channel = null;
-    connected.value = false;
+    _closeChannel();
     // 清空顶部弹幕队列与当前展示
     _bannerQueue.clear();
     topBanner.value = null;
