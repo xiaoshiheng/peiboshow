@@ -10,11 +10,18 @@ import '../../api_request/api_request_client.dart';
 import '../../global_contoller/global_controller.dart';
 import '../../models/user_model.dart';
 import '../../routes/all_routes.dart';
+import '../../utils/nsuserdefault.dart';
 
 class LoginController extends GetxController {
   GlobalController globalController = Get.find<GlobalController>();
   /// 验证码倒计时总时长(秒)
   static const int _countdownSeconds = 60;
+
+  /// 本地保存登录手机号的 key
+  static const String _kSavedPhone = 'loginPhone';
+
+  /// 本地保存登录密码的 key
+  static const String _kSavedPassword = 'loginPassword';
 
   /// 手机号输入控制器
   final TextEditingController phoneController = TextEditingController();
@@ -41,6 +48,13 @@ class LoginController extends GetxController {
   final RxInt countdown = 0.obs;
 
   Timer? _timer;
+
+  @override
+  void onInit() {
+    super.onInit();
+    // 进入登录页时读取本地保存的账号密码并自动填充
+    _loadSavedCredentials();
+  }
 
   /// 倒计时是否进行中
   bool get isCountingDown => countdown.value > 0;
@@ -145,6 +159,8 @@ class LoginController extends GetxController {
       globalController.token = response["token"];
       await globalController.saveToken(globalController.token ?? "", globalController.userModel);
       if (globalController.token != null && globalController.token!.isNotEmpty) {
+        // 登录成功:保存手机号,下次自动填充(验证码登录不保存密码)
+        await _saveCredentials(phone: phoneController.text.trim());
         //需要先判断有没有绑定过包厢，如果没有绑定过包厢，先跳转到绑定包厢页面
          Get.offNamed(AllRoutes.liveFeedPage);
       }
@@ -165,6 +181,11 @@ class LoginController extends GetxController {
       globalController.token = response["token"];
       await globalController.saveToken(globalController.token ?? "", globalController.userModel);
       if (globalController.token != null && globalController.token!.isNotEmpty) {
+        // 登录成功:保存手机号与密码,下次自动填充
+        await _saveCredentials(
+          phone: phoneController.text.trim(),
+          password: passwordController.text.trim(),
+        );
         //需要先判断有没有绑定过包厢，如果没有绑定过包厢，先跳转到绑定包厢页面
         Get.offNamed(AllRoutes.liveFeedPage);
       }
@@ -177,6 +198,39 @@ class LoginController extends GetxController {
   /// 切换登录模式(验证码登录 <-> 密码登录)
   void toggleLoginMode() {
     isPasswordLogin.value = !isPasswordLogin.value;
+  }
+
+  /// 读取本地保存的账号密码并填充;若存在已保存密码则默认切到密码登录模式
+  Future<void> _loadSavedCredentials() async {
+    final NSUserDefault ud = await NSUserDefault.getInstance();
+    final String? phone = ud.getValueForKey(_kSavedPhone) as String?;
+    final String? password = ud.getValueForKey(_kSavedPassword) as String?;
+    if (phone != null && phone.isNotEmpty) {
+      phoneController.text = phone;
+    }
+    if (password != null && password.isNotEmpty) {
+      passwordController.text = password;
+      // 本地已有密码,默认切到密码登录模式,方便一键登录
+      isPasswordLogin.value = true;
+    }
+  }
+
+  /// 保存登录账号(手机号)与密码到本地,供下次自动填充
+  /// [password] 为 null 时表示验证码登录,仅保存手机号;
+  /// 若此时手机号与上次保存的不同(换账号),清除残留密码避免填错。
+  Future<void> _saveCredentials({
+    required String phone,
+    String? password,
+  }) async {
+    final NSUserDefault ud = await NSUserDefault.getInstance();
+    final String? oldPhone = ud.getValueForKey(_kSavedPhone) as String?;
+    if (password == null && oldPhone != null && oldPhone != phone) {
+      await ud.removeValueForKey(_kSavedPassword);
+    }
+    await ud.setString(_kSavedPhone, phone);
+    if (password != null && password.isNotEmpty) {
+      await ud.setString(_kSavedPassword, password);
+    }
   }
 
   /// 启动 60s 倒计时
